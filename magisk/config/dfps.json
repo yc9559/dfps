@@ -1,0 +1,33 @@
+{
+    "help": {
+        "general": "Dfps will automatically reload this config file after modification.",
+        "basic.def": "<keyword> : <actual framerate>. If the value of keyword in [20, +inf), use 'PEAK_REFRESH_RATE 'path. If the value of keyword in [0, 20), use 'surfaceflinger backdoor' method.",
+        "basic.slackMs": "Enter active state when touching the screen. Enter idle state <slackMs> ms after releasing screen.",
+        "rule": "Per-app dynamic screen refresh rate rule. Default rule(packageName=default) must be specified. Offscreen rule(packageName=offsceen) is recommended to set dfps off(value=-1)."
+    },
+    "basic": {
+        "def": {
+            "0": 120,
+            "1": 90,
+            "2": 60
+        },
+        "slackMs": 3000
+    },
+    "rule": [
+        {
+            "packageName": "com.hypergryph.arknights",
+            "active": 60,
+            "idle": 60
+        },
+        {
+            "packageName": "offsceen",
+            "active": -1,
+            "idle": -1
+        },
+        {
+            "packageName": "default",
+            "active": 120,
+            "idle": 60
+        }
+    ]
+}
