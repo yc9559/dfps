@@ -118,7 +118,7 @@ on_install()
     cfg_dir="/sdcard/yc/dfps"
     mkdir -p $cfg_dir
     if [ ! -e "$cfg_dir/dfps.json" ]; then
-        cp $BASEDIR/config/cdfps.json $cfg_dir/dfps.json 2> /dev/null
+        cp $MODPATH/config/dfps.json $cfg_dir/dfps.json
     fi
     ui_print "- Dfps config is located at $cfg_dir"
 }
