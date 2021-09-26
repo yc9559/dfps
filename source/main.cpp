@@ -43,16 +43,16 @@ static pid_t new_pid;
 static pid_t old_pid;
 
 void InitLogger(void) {
-    spdlog::set_pattern("[%H:%M:%S][%L] %!: %v");
-    spdlog::default_logger()->flush_on(spdlog::level::info);
+    auto logger = spdlog::default_logger();
     if (logFile.empty() == false) {
         auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, false);
-        spdlog::default_logger()->sinks().emplace_back(sink);
+        logger->sinks().emplace_back(sink);
     }
+    logger->set_pattern("[%H:%M:%S][%L] %!: %v");
+    logger->flush_on(spdlog::level::info);
 }
 
 void DfpsMain(void) {
-    InitLogger();
     SPDLOG_INFO("New dfps is running");
     for (;;) {
         sleep(UINT32_MAX);
@@ -156,6 +156,7 @@ void ParseOpt(int argc, char **argv) {
                 break;
             case 'o':
                 logFile = std::string(optarg);
+                remove(logFile.c_str());
                 break;
             default:
                 PrintHelp();
