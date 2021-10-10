@@ -38,6 +38,8 @@ DelayedWorker::DelayedWorker() : timerId_(nullptr), isThreadInited_(false) {
     timer_create(CLOCK_MONOTONIC, &evp, &timerId_);
 }
 
+DelayedWorker::~DelayedWorker() { timer_delete(timerId_); }
+
 DelayedWorker::Handle DelayedWorker::Create(const std::string &name) {
     std::lock_guard<std::mutex> lk(mut_);
     Handle handle = slots_.size();

@@ -30,6 +30,7 @@ public:
     static constexpr int64_t SLEEP_TS = 0;
 
     DelayedWorker();
+    ~DelayedWorker();
     Handle Create(const std::string &name);
     void SetWork(Handle handle, const Work &work, int64_t ts);
 

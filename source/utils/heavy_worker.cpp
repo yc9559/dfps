@@ -60,6 +60,7 @@ HeavyWorker::HeavyWorker() {
             }
         }
     });
+    th_.detach();
 }
 
 HeavyWorker::Handle HeavyWorker::Create(const std::string &name) {
