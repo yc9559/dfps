@@ -2,4 +2,5 @@ BasedOnStyle: LLVM
 IndentWidth: 4
 AccessModifierOffset: -4
 IndentCaseLabels: true
+AlwaysBreakTemplateDeclarations: Yes
 ColumnLimit: 120
