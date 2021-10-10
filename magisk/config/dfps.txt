@@ -1,0 +1,41 @@
+# 动态刷新率配置文件
+# Dynamic screen refresh rate controller config
+# 修改本文件后dfps会重新加载本配置
+# Dfps will automatically reload this config file after modification
+# 支持2种刷新率切换方法，根据设定值的数值范围不同选择对应的方法
+# Two method are supported. Method chosing based on the value
+
+# 方法1: PEAK_REFRESH_RATE法，值>=20
+# Method 1: PEAK_REFRESH_RATE, value in [0, 20)
+# 值: 系统支持的刷新率，请不要设置系统不支持的帧率
+# Value: refresh rate supported by system, do not use the value not supported by system
+
+# 方法2: Surfaceflinger backdoor法，值<20
+# Method 2: Surfaceflinger backdoor, value in [20, +inf)
+# 值: 系统支持的刷新率索引，0/1/2/...对应的帧率需要自行尝试。
+# Value: refresh rate index supported by system, correspondence varies from systems
+# 以下为几种可能的值与刷新率的对应关系，供参考
+# Several possible values ​​and refresh rate for reference
+# 0:120hz，1:90hz，2:60hz
+# 0:60hz，1:90hz
+# 0:30hz，1:50hz，2:60hz，3:90hz，4:120hz，5:144hz
+# 0:1080p60hz，1:1440p120hz，2:1440p60hz，3:1080p120hz
+
+# 分应用规则优先级从高到低排列
+# The priority of the per-app rules is ordered from high to low
+# "-"表示熄屏规则，"*"表示默认规则，熄屏和默认规则必须指定
+# "-" = offscreen. "*" = default. Offscreen and default rule must be specified
+# 值为"-1"表示使用系统默认的刷新率切换规则
+# "-1" means use the default screen refresh rate rule of system
+# 格式：包名 空闲值 触摸操作值
+# Format: packageName idleValue activeValue
+
+# 分应用动态刷新率配置
+# Per-app dynamic screen refresh rate rule
+com.hypergryph.arknights 60 60
+- 120 120
+* 60 120
+
+# 触摸松开后等待touchSlackMs毫秒进入空闲状态
+# Wait for touchSlackMs ms to enter the idle state after the touch is released
+/touchSlackMs 3000

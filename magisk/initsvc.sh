@@ -36,4 +36,4 @@ wait_until_login()
 }
 
 wait_until_login
-$BASEDIR/bin/dfps /sdcard/yc/dfps/dfps.json -o /sdcard/yc/dfps/dfps.log
+$BASEDIR/bin/dfps /sdcard/yc/dfps/dfps.txt -o /sdcard/yc/dfps/dfps.log
