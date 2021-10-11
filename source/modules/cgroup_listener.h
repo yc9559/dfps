@@ -18,13 +18,32 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
-#include <vector>
+#include "cobridge_type.h"
+#include "utils/inotify.h"
+#include "utils/time_counter.h"
+#include <thread>
 
-int64_t GetNowTs(void);
+class CgroupListener {
+public:
+    CgroupListener();
+    void Start(void);
 
-bool IsSpace(const char c);
-bool IsDigit(const char c);
-bool ParseInt(const char *s, int32_t *val);
+private:
+    void OnTaModified(const std::string &, int);
+    void OnFgModified(const std::string &, int);
+    void OnBgModified(const std::string &, int);
+    void OnReModified(const std::string &, int);
 
-void GetUnsignedIntFromFile(const std::string &path, std::vector<int> *numbers);
+    Inotify inoti_;
+    std::thread th_;
+
+    PidList ta_;
+    PidList fg_;
+    PidList bg_;
+    PidList re_;
+
+    TimeCounter taTimer_;
+    TimeCounter fgTimer_;
+    TimeCounter bgTimer_;
+    TimeCounter reTimer_;
+};

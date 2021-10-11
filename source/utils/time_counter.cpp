@@ -16,15 +16,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#pragma once
+#include "time_counter.h"
+#include "misc.h"
 
-#include <string>
-#include <vector>
+TimeCounter::TimeCounter() { Reset(); }
 
-int64_t GetNowTs(void);
+void TimeCounter::Reset(void) { start_ = GetNowTs(); }
 
-bool IsSpace(const char c);
-bool IsDigit(const char c);
-bool ParseInt(const char *s, int32_t *val);
+int64_t TimeCounter::ElapsedUs(void) const { return GetNowTs() - start_; }
 
-void GetUnsignedIntFromFile(const std::string &path, std::vector<int> *numbers);
+int64_t TimeCounter::ElapsedMs(void) const { return ElapsedUs() / 1000; }
+
+double TimeCounter::ElapsedS(void) const { return ElapsedUs() / 1000.0 / 1000.0; }

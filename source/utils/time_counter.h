@@ -18,13 +18,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
-#include <vector>
+#include <stdint.h>
 
-int64_t GetNowTs(void);
+class TimeCounter {
+public:
+    TimeCounter();
 
-bool IsSpace(const char c);
-bool IsDigit(const char c);
-bool ParseInt(const char *s, int32_t *val);
+    void Reset(void);
+    int64_t ElapsedUs(void) const;
+    int64_t ElapsedMs(void) const;
+    double ElapsedS(void) const;
 
-void GetUnsignedIntFromFile(const std::string &path, std::vector<int> *numbers);
+private:
+    int64_t start_;
+};

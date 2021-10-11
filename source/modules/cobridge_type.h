@@ -18,13 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
 #include <vector>
+#include <set>
 
-int64_t GetNowTs(void);
-
-bool IsSpace(const char c);
-bool IsDigit(const char c);
-bool ParseInt(const char *s, int32_t *val);
-
-void GetUnsignedIntFromFile(const std::string &path, std::vector<int> *numbers);
+using PidList = std::vector<int>;
+using PidSet = std::set<int>;
