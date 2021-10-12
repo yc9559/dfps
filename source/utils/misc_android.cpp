@@ -17,13 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include "misc_android.h"
-#include <unistd.h>
-#include <stdlib.h>
-#include <vector>
 #include <cstring>
+#include <dirent.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <vector>
 
-std::string GetTopAppNameDumpsys(void)
-{
+std::string GetTopAppNameDumpsys(void) {
     constexpr char DUMPSYS_CMD[] = "/system/bin/dumpsys activity o";
     constexpr char TA_KEYWORD[] = "(top-activity)";
     constexpr int DUMPSYS_EXEC_WAIT_US = 80 * 1000;
@@ -67,4 +68,87 @@ std::string GetTopAppNameDumpsys(void)
     }
     *end = '\0';
     return topappName;
+}
+
+std::string GetTombstone(int pid) {
+    constexpr char TOMBSTONE_DIR[] = "/data/tombstones";
+    constexpr char TOMBSTONE_STOP_KEYWORD[] = "stack";
+    constexpr int TOMBSTONE_HEAD_LINES = 8;
+    constexpr int TOMBSTONE_MAX_LINES = 32;
+
+    if (access(TOMBSTONE_DIR, F_OK) != 0) {
+        return {};
+    }
+
+    char path[PATH_MAX];
+    std::string latest;
+    int64_t latestTs = 0;
+    struct stat st;
+
+    // get the latest tombstone
+    DIR *tsfp = opendir(TOMBSTONE_DIR);
+    struct dirent *dp;
+    while ((dp = readdir(tsfp))) {
+        // skip . and ..
+        if (dp->d_name[0] == '.') {
+            continue;
+        }
+        snprintf(path, sizeof(path), "%s/%s", TOMBSTONE_DIR, dp->d_name);
+        if (stat(path, &st) == 0) {
+            int64_t ts = st.st_mtim.tv_sec * 1e9 + st.st_mtim.tv_nsec;
+            if (ts > latestTs) {
+                latest = path;
+                latestTs = ts;
+            }
+        }
+    }
+    closedir(tsfp);
+
+    if (latestTs == 0) {
+        return {};
+    }
+
+    FILE *fp = fopen(latest.c_str(), "re");
+    if (fp == NULL) {
+        return {};
+    }
+
+    char buf[512];
+    bool is_this_file = false;
+    for (int i = 0; i < TOMBSTONE_HEAD_LINES; ++i) {
+        if (feof(fp))
+            break;
+        // pid: 17096, tid: 17098, name: unwind  >>> ./unwind <<<
+        int owner_pid = 0;
+        fgets(buf, sizeof(buf), fp);
+        sscanf(buf, "%*s %d", &owner_pid);
+        if (owner_pid == pid) {
+            is_this_file = true;
+            break;
+        }
+    }
+    if (is_this_file == false) {
+        fclose(fp);
+        return {};
+    }
+
+    // skip the first line of *****
+    rewind(fp);
+
+    std::string bt;
+    fgets(buf, sizeof(buf), fp);
+    for (int i = 0; i < TOMBSTONE_MAX_LINES; ++i) {
+        if (feof(fp)) {
+            break;
+        }
+        // print backtrace only
+        fgets(buf, sizeof(buf), fp);
+        if (strncmp(buf, TOMBSTONE_STOP_KEYWORD, strlen(TOMBSTONE_STOP_KEYWORD)) == 0) {
+            break;
+        }
+        bt += buf;
+    }
+
+    fclose(fp);
+    return bt;
 }

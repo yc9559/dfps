@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <getopt.h>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <sys/prctl.h>
 #include <sys/wait.h>
@@ -27,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <spdlog/spdlog.h>
 
 #include "utils/inotify.h"
+#include "utils/misc_android.h"
 
 static const std::string DAEMON_NAME = "Dfpsd";
 static const std::string PROC_NAME = "Dfps";
@@ -50,6 +52,22 @@ void InitLogger(void) {
     }
     logger->set_pattern("[%H:%M:%S][%L] %!: %v");
     logger->flush_on(spdlog::level::info);
+}
+
+void PrintTombstone(int pid) {
+    auto bt = GetTombstone(pid);
+    if (bt.empty()) {
+        SPDLOG_ERROR("Cannot find the tombstone");
+        return;
+    }
+
+    SPDLOG_ERROR(">>> Start of tombstone {} <<<", pid);
+    std::stringstream ss(bt);
+    std::string line;
+    while (std::getline(ss, line)) {
+        SPDLOG_ERROR(line);
+    }
+    SPDLOG_ERROR(">>> End of tombstone {} <<<", pid);
 }
 
 void DfpsMain(void) {
@@ -95,7 +113,10 @@ void DaemonSigHandler(int signum) {
             }
             dead_pid = child_pid;
             if (WIFSIGNALED(status)) {
-                SPDLOG_ERROR("Dfps(pid={}) terminated unexpectedly", dead_pid);
+                SPDLOG_ERROR("Dfps(pid={}) terminated unexpectedly, try to get tombstone", dead_pid);
+                // wait tombstone generated
+                sleep(1);
+                PrintTombstone(dead_pid);
             }
             break;
         case SIGTERM:
