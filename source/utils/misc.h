@@ -22,9 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 
 int64_t GetNowTs(void);
+int64_t MsToUs(int64_t ms);
 
 bool IsSpace(const char c);
 bool IsDigit(const char c);
 bool ParseInt(const char *s, int32_t *val);
 
 void GetUnsignedIntFromFile(const std::string &path, std::vector<int> *numbers);
+
+void SetSelfThreadName(const std::string &name);

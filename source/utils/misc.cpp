@@ -19,11 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "misc.h"
 #include <chrono>
 #include <cstring>
+#include <sys/prctl.h>
 
 int64_t GetNowTs(void) {
     auto ns = std::chrono::steady_clock::time_point::clock().now().time_since_epoch();
     return std::chrono::duration_cast<std::chrono::microseconds>(ns).count();
 }
+
+int64_t MsToUs(int64_t ms) { return ms * 1000; }
 
 bool IsSpace(const char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r'; }
 
@@ -122,3 +125,5 @@ void GetUnsignedIntFromFile(const std::string &path, std::vector<int> *numbers) 
         }
     }
 }
+
+void SetSelfThreadName(const std::string &name) { prctl(PR_SET_NAME, name.c_str()); }

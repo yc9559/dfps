@@ -18,8 +18,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <vector>
 #include <set>
+#include <vector>
 
 using PidList = std::vector<int>;
 using PidSet = std::set<int>;
+
+struct InputData {
+    bool inHold;
+    bool inSwipe;
+    bool inGesture;
+    InputData() : inHold(false), inSwipe(false), inGesture(false) {}
+};

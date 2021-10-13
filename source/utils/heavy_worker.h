@@ -23,8 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <functional>
 #include <mutex>
 #include <string>
-#include <vector>
 #include <thread>
+#include <vector>
 
 class HeavyWorker : public Singleton<HeavyWorker> {
 public:

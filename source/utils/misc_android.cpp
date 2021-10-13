@@ -114,7 +114,7 @@ std::string GetTombstone(int pid) {
     }
 
     char buf[512];
-    bool is_this_file = false;
+    bool isThisFile = false;
     for (int i = 0; i < TOMBSTONE_HEAD_LINES; ++i) {
         if (feof(fp))
             break;
@@ -123,11 +123,11 @@ std::string GetTombstone(int pid) {
         fgets(buf, sizeof(buf), fp);
         sscanf(buf, "%*s %d", &owner_pid);
         if (owner_pid == pid) {
-            is_this_file = true;
+            isThisFile = true;
             break;
         }
     }
-    if (is_this_file == false) {
+    if (isThisFile == false) {
         fclose(fp);
         return {};
     }

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "heavy_worker.h"
 #include "fmt_exception.h"
-#include <sys/prctl.h>
+#include "misc.h"
 
 DECLARE_SINGLETON(HeavyWorker)
 
@@ -53,7 +53,7 @@ HeavyWorker::HeavyWorker() {
                     w = nullptr;
                 }
                 if (cur != prevHandle) {
-                    prctl(PR_SET_NAME, name.c_str());
+                    SetSelfThreadName(name);
                 }
                 prevHandle = cur;
                 work();

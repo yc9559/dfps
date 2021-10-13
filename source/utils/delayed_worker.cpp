@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "fmt_exception.h"
 #include "misc.h"
 #include <signal.h>
-#include <sys/prctl.h>
 #include <unistd.h>
 
 DECLARE_SINGLETON(DelayedWorker)
@@ -67,7 +66,7 @@ void DelayedWorker::SetWork(Handle handle, const Work &work, int64_t ts) {
 void DelayedWorker::_OnTimer(void) {
     if (isThreadInited_ == false) {
         isThreadInited_ = true;
-        prctl(PR_SET_NAME, MODULE_NAME);
+        SetSelfThreadName(MODULE_NAME);
     }
 
     Work work;

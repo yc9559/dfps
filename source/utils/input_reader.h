@@ -44,7 +44,7 @@ public:
         DevProp() : fd(0), useEvtKey(false) {}
     };
 
-    InputReader(const std::string &path);
+    explicit InputReader(const std::string &path);
     ~InputReader();
 
     const DevProp &GetProp(void) const;
