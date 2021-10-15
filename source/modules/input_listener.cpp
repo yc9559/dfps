@@ -100,9 +100,9 @@ void InputListener::InitReaders(void) {
             int fd = reader.GetProp().fd;
             readers_.emplace(fd, reader);
             AddPoll(fd);
-            SPDLOG_INFO("Listening input device '{}'", path);
+            SPDLOG_INFO("Listening {} device '{}'", std::to_string(reader.GetProp().devType), path);
         } catch (const std::exception &e) {
-            SPDLOG_INFO("Skip unsupported input device '{}'", path);
+            // SPDLOG_INFO("Skip unsupported input device '{}'", path);
         }
     }
     closedir(dirFp);

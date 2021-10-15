@@ -60,3 +60,9 @@ private:
     Info info_;
     std::vector<uint8_t> buf_;
 };
+
+namespace std {
+
+std::string to_string(InputReader::DevType type);
+
+} // namespace std

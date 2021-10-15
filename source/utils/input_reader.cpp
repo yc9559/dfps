@@ -168,3 +168,19 @@ void InputReader::ReadBtnProp() {
     ioctl(fd, EVIOCGNAME(sizeof(name)), name);
     prop_.name = name;
 }
+
+namespace std {
+
+std::string to_string(InputReader::DevType type) {
+    switch (type) {
+        case InputReader::DevType::TOUCH_PANEL:
+            return "touchpanel";
+        case InputReader::DevType::BTN:
+            return "btn";
+        default:
+            break;
+    }
+    return "unknown";
+}
+
+} // namespace std

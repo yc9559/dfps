@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "utils/misc.h"
 #include <unistd.h>
 
+constexpr char MODULE_NAME[] = "CgroupListener";
 constexpr int WATCH_FLAG = Inotify::MODIFY;
 const std::string TOP_PATH = "/dev/cpuset/top-app/tasks";
 const std::string FG_PATH = "/dev/cpuset/foreground/tasks";
@@ -40,6 +41,7 @@ CgroupListener::CgroupListener() {
 
 void CgroupListener::Start(void) {
     th_ = std::thread([this]() {
+        SetSelfThreadName(MODULE_NAME);
         for (;;) {
             inoti_.WaitAndHandle();
             usleep(INOTIFY_EVT_MIN_INTERVAL_US);
