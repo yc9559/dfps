@@ -22,3 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 std::string GetTopAppNameDumpsys(void);
 std::string GetTombstone(int pid);
+
+void SysPeakRefreshRate(const std::string &hz, bool force);
+void SysSurfaceflingerBackdoor(const std::string &idx, bool force);

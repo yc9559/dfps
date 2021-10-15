@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <dirent.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <vector>
 
@@ -151,4 +152,52 @@ std::string GetTombstone(int pid) {
 
     fclose(fp);
     return bt;
+}
+
+void SyncCallPutRefreshRate(const char *key, const char *hz) {
+    pid_t pid = fork();
+    if (pid == -1) {
+        return;
+    } else if (pid == 0) {
+        execl("/system/bin/cmd", "/system/bin/cmd", "settings", "put", "system", key, hz, NULL);
+        exit(-1);
+    } else {
+        waitpid(pid, NULL, 0);
+    }
+}
+
+void SyncCallSurfaceflingerBackdoor(const char *code, const char *hz) {
+    pid_t pid = fork();
+    if (pid == -1) {
+        return;
+    } else if (pid == 0) {
+        execl("/system/bin/service", "/system/bin/service", "call", "SurfaceFlinger", code, "i32", hz, NULL);
+        exit(-1);
+    } else {
+        waitpid(pid, NULL, 0);
+    }
+}
+
+void SysPeakRefreshRate(const std::string &hz, bool force) {
+    SyncCallPutRefreshRate("peak_refresh_rate", hz.c_str());
+    SyncCallPutRefreshRate("min_refresh_rate", hz.c_str());
+}
+
+void SysSurfaceflingerBackdoor(const std::string &idx, bool force) {
+    // >= Android 10
+    // 1035 -1/0/1/2: setActiveConfig
+    SyncCallSurfaceflingerBackdoor("1035", idx.c_str());
+
+    if (force) {
+        // >= Android 11
+        // 1036 1: Frame rate flexibility token acquired. count=1
+        // 1036 0: Frame rate flexibility token released. count=0
+        // service call SurfaceFlinger 1035 i32 -1 -- okay
+        // service call SurfaceFlinger 1036 i32 1
+        // service call SurfaceFlinger 1035 i32 2 -- not working
+        SyncCallSurfaceflingerBackdoor("1036", "1");
+        SyncCallSurfaceflingerBackdoor("1035", "-1");
+        SyncCallSurfaceflingerBackdoor("1036", "0");
+        SyncCallSurfaceflingerBackdoor("1035", idx.c_str());
+    }
 }
