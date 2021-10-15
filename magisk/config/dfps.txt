@@ -36,6 +36,10 @@ com.hypergryph.arknights 60 60
 - 120 120
 * 60 120
 
+# 使用Surfaceflinger backdoor法切换屏幕刷新率
+# Use Surfaceflinger backdoor to switch screen refresh rate
+/useSfBackdoor 0
+
 # 触摸松开后等待touchSlackMs毫秒进入空闲状态
 # Wait for touchSlackMs ms to enter the idle state after the touch is released
 /touchSlackMs 3000
