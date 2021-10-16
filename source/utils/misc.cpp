@@ -26,8 +26,6 @@ int64_t GetNowTs(void) {
     return std::chrono::duration_cast<std::chrono::microseconds>(ns).count();
 }
 
-int64_t MsToUs(int64_t ms) { return ms * 1000; }
-
 bool IsSpace(const char c) { return c == ' ' || c == '\t' || c == '\n' || c == '\v' || c == '\f' || c == '\r'; }
 
 bool IsDigit(const char c) { return c >= '0' && c <= '9'; }

@@ -18,16 +18,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <string>
-#include <vector>
+#include "cobridge_type.h"
+#include "utils/delayed_worker.h"
+#include "utils/heavy_worker.h"
+#include "utils/time_counter.h"
 
-int64_t GetNowTs(void);
-constexpr int64_t MsToUs(int64_t ms) { return ms * 1000; }
+class TopappMonitor {
+public:
+    TopappMonitor();
+    void Start(void);
 
-bool IsSpace(const char c);
-bool IsDigit(const char c);
-bool ParseInt(const char *s, int32_t *val);
+private:
+    void OnCgroupUpdated(void *data);
+    void OnTopappList(void *data);
 
-void GetUnsignedIntFromFile(const std::string &path, std::vector<int> *numbers);
-
-void SetSelfThreadName(const std::string &name);
+    int curTopTaskNr_;
+    int prevTopTaskNr_;
+    TimeCounter timer_;
+    HeavyWorker::Handle hw_;
+    DelayedWorker::Handle dw_;
+};
