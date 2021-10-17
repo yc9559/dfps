@@ -57,9 +57,10 @@ void InitLogger(void) {
         auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, false);
         logger->sinks().emplace_back(sink);
     }
+    // use SPDLOG_ACTIVE_LEVEL to switch log level
     logger->set_pattern("%H:%M:%S %L %v");
     logger->set_level(spdlog::level::debug);
-    logger->flush_on(spdlog::level::info);
+    logger->flush_on(spdlog::level::debug);
 }
 
 void PrintTombstone(int pid) {
