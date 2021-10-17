@@ -41,7 +41,9 @@ private:
     std::string FindInvalidRule(void);
 
     void AddReactor(void);
-    void OnInput(const void *data);
+    void OnInputTouch(const void *data);
+    void OnInputBtn(const void *data);
+    void OnInput(void);
     void OnInputScene(const void *data);
     void OnTopAppSwitch(const void *data);
     void OnOffscreen(const void *data);
@@ -59,6 +61,8 @@ private:
     bool hasUniversial_;
     bool hasOffscreen_;
 
+    bool touchPressed_;
+    bool btnPressed_;
     bool active_;
     std::string curApp_;
     std::string overridedApp_;

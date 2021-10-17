@@ -48,6 +48,8 @@ DynamicFps::DynamicFps(const std::string &configPath)
       gestureSlackMs_(DEFAULT_GESTURE_SLACK_MS),
       hasUniversial_(false),
       hasOffscreen_(false),
+      touchPressed_(false),
+      btnPressed_(false),
       active_(false),
       isOffscreen_(false),
       curHz_(INT32_MAX),
@@ -174,15 +176,27 @@ std::string DynamicFps::FindInvalidRule(void) {
 void DynamicFps::AddReactor(void) {
     using namespace std::placeholders;
     auto co = CoBridge::GetInstance();
-    co->Subscribe("input.touch", std::bind(&DynamicFps::OnInput, this, _1));
-    co->Subscribe("input.btn", std::bind(&DynamicFps::OnInput, this, _1));
+    co->Subscribe("input.touch", std::bind(&DynamicFps::OnInputTouch, this, _1));
+    co->Subscribe("input.btn", std::bind(&DynamicFps::OnInputBtn, this, _1));
     co->Subscribe("input.state", std::bind(&DynamicFps::OnInputScene, this, _1));
     co->Subscribe("topapp.pkgName", std::bind(&DynamicFps::OnTopAppSwitch, this, _1));
     co->Subscribe("offscreen.state", std::bind(&DynamicFps::OnOffscreen, this, _1));
 }
 
-void DynamicFps::OnInput(const void *data) {
+void DynamicFps::OnInputTouch(const void *data) {
     const auto &pressed = CoBridge::Get<bool>(data);
+    touchPressed_ = pressed;
+    OnInput();
+}
+
+void DynamicFps::OnInputBtn(const void *data) {
+    const auto &pressed = CoBridge::Get<bool>(data);
+    btnPressed_ = pressed;
+    OnInput();
+}
+
+void DynamicFps::OnInput(void) {
+    auto pressed = touchPressed_ || btnPressed_;
     if (pressed) {
         active_ = true;
         SwitchRefreshRate();
