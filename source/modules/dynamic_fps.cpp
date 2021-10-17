@@ -218,6 +218,7 @@ void DynamicFps::OnInputScene(const void *data) {
     if (input.inGesture) {
         overridedApp_ = UNIVERSIAL_PKG_NAME;
         SwitchRefreshRate();
+    } else {
         auto resume = [=]() {
             if (overridedApp_ == UNIVERSIAL_PKG_NAME) {
                 overridedApp_ = "";
