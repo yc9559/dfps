@@ -29,6 +29,7 @@ constexpr char INPUT_DEV_DIR[] = "/dev/input";
 constexpr int INPUT_LISTEN_RETRY_MS = 1000;
 constexpr int INPUT_SAMPLE_MS = 10;
 constexpr float SWIPE_THD = 0.03;
+constexpr float SWIPE_INC_LIMIT = 0.2;
 constexpr float GESTURE_PCT_X = 0.04;
 constexpr float GESTURE_PCT_Y = 0.03;
 constexpr int GESTURE_DELAY_MS = 1000;
@@ -124,7 +125,8 @@ void InputListener::HandleTouchInput(const InputReader::Info &info) {
 
     if (info.pressed) {
         if (prevTouch_.pressed) {
-            swipeDist_ += distance(info.x, info.y, prevTouch_.x, prevTouch_.y);
+            auto dist = distance(info.x, info.y, prevTouch_.x, prevTouch_.y);
+            swipeDist_ += (dist < SWIPE_INC_LIMIT) ? dist : 0.0;
         } else {
             touchTimer_.Reset();
             swipeDist_ = 0.0;
