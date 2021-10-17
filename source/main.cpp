@@ -56,7 +56,7 @@ void InitLogger(void) {
         auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, false);
         logger->sinks().emplace_back(sink);
     }
-    logger->set_pattern("[%H:%M:%S][%L] %!: %v");
+    logger->set_pattern("%H:%M:%S %L %!: %v");
     logger->flush_on(spdlog::level::info);
 }
 

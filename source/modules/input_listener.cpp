@@ -95,10 +95,11 @@ void InputListener::InitReaders(void) {
         snprintf(path, sizeof(path), "%s/%s", INPUT_DEV_DIR, dp->d_name);
         try {
             InputReader reader(path);
-            int fd = reader.GetProp().fd;
+            const auto &prop = reader.GetProp();
+            int fd = prop.fd;
             readers_.emplace(fd, reader);
             AddPoll(fd);
-            SPDLOG_INFO("Listening {} device '{}'", std::to_string(reader.GetProp().devType), path);
+            SPDLOG_INFO("Listening {} device '{}'", std::to_string(prop.devType), prop.name);
         } catch (const std::exception &e) {
             // SPDLOG_INFO("Skip unsupported input device '{}'", path);
         }

@@ -88,11 +88,11 @@ void CgroupListener::UpdatePidList(void) {
             updatePidList(&ta_, TOP_PATH);
             CoBridge::GetInstance()->Publish("cgroup.ta.list", &ta_);
             updatePidList(&fg_, FG_PATH);
-            CoBridge::GetInstance()->Publish("cgroup.fg.list", &ta_);
+            CoBridge::GetInstance()->Publish("cgroup.fg.list", &fg_);
             updatePidList(&bg_, BG_PATH);
-            CoBridge::GetInstance()->Publish("cgroup.bg.list", &ta_);
+            CoBridge::GetInstance()->Publish("cgroup.bg.list", &bg_);
             updatePidList(&re_, RE_PATH);
-            CoBridge::GetInstance()->Publish("cgroup.re.list", &ta_);
+            CoBridge::GetInstance()->Publish("cgroup.re.list", &re_);
         };
         HeavyWorker::GetInstance()->SetWork(hw_, heavywork);
     };
