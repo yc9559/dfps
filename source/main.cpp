@@ -117,6 +117,7 @@ void StartNewDfps(void) {
     old_pid = dfps_pid;
     new_pid = fork();
     if (new_pid == 0) {
+        SetSelfThreadName(PROC_NAME);
         SetSigHandler();
         DfpsMain();
     }
@@ -172,8 +173,12 @@ void Daemon(void) {
         SPDLOG_INFO("Config file updated");
         StartNewDfps();
         if (new_pid != dead_pid) {
-            SPDLOG_INFO("Succeeded to load new config file, terminate the old dfps");
-            kill(old_pid, TERM_SIG);
+            if (old_pid) {
+                SPDLOG_INFO("Succeeded to load new config file, terminate the old dfps");
+                kill(old_pid, TERM_SIG);
+            } else {
+                SPDLOG_INFO("Succeeded to load new config file");
+            }
         } else {
             SPDLOG_INFO("Failed to load new config file, the old dfps will keep running");
         }
