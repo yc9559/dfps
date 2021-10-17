@@ -20,8 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "fmt_exception.h"
 #include "misc.h"
 
-DECLARE_SINGLETON(HeavyWorker)
-
 constexpr HeavyWorker::Handle EMPTY_HANDLE = -1;
 
 HeavyWorker::HeavyWorker() {

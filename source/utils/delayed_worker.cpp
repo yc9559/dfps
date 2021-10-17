@@ -22,8 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <signal.h>
 #include <unistd.h>
 
-DECLARE_SINGLETON(DelayedWorker)
-
 constexpr char MODULE_NAME[] = "DelayedWorker";
 
 void OnTimerWrapper(union sigval v) { DelayedWorker::GetInstance()->_OnTimer(); }

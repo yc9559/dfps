@@ -30,6 +30,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "utils/inotify.h"
 #include "utils/misc_android.h"
 
+#include "modules/cgroup_listener.h"
+#include "modules/dynamic_fps.h"
+#include "modules/input_listener.h"
+#include "modules/offscreen_monitor.h"
+#include "modules/topapp_monitor.h"
+
 static const std::string DAEMON_NAME = "Dfpsd";
 static const std::string PROC_NAME = "Dfps";
 static const std::string PROJECT_URL = "https://github.com/yc9559/dfps";
@@ -72,6 +78,18 @@ void PrintTombstone(int pid) {
 
 void DfpsMain(void) {
     SPDLOG_INFO("New dfps is running");
+
+    InputListener input;
+    input.Start();
+    CgroupListener cgroup;
+    cgroup.Start();
+    TopappMonitor topapp;
+    topapp.Start();
+    OffscreenMonitor offscreen;
+    offscreen.Start();
+    DynamicFps dfps(configFile);
+    dfps.Start();
+
     for (;;) {
         sleep(UINT32_MAX);
     }

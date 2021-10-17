@@ -36,4 +36,6 @@ wait_until_login()
 }
 
 wait_until_login
-$BASEDIR/bin/dfps /sdcard/yc/dfps/dfps.txt -o /sdcard/yc/dfps/dfps.log
+
+DFPS_DIR="/sdcard/yc/dfps"
+$BASEDIR/bin/dfps $DFPS_DIR/dfps.txt -o $DFPS_DIR/dfps.log > $DFPS_DIR/dfps.log

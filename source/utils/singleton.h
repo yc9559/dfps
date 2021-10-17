@@ -28,20 +28,18 @@ public:
     Singleton(const Singleton &) = delete;
     Singleton &operator=(const Singleton &) = delete;
 
-    static T *GetInstance(void);
+    static T *GetInstance(void) {
+        std::call_once(once_, []() { instance_ = new T(); });
+        return instance_;
+    }
 
 private:
     static T *instance_;
     static std::once_flag once_;
 };
 
-#define DECLARE_SINGLETON(T)                                                                                           \
-    template <typename T>                                                                                              \
-    T *Singleton<T>::instance_ = nullptr;                                                                              \
-    template <typename T>                                                                                              \
-    std::once_flag Singleton<T>::once_;                                                                                \
-    template <typename T>                                                                                              \
-    T *Singleton<T>::GetInstance(void) {                                                                               \
-        std::call_once(once_, []() { instance_ = new T(); });                                                          \
-        return instance_;                                                                                              \
-    }
+template <typename T>
+T *Singleton<T>::instance_ = nullptr;
+
+template <typename T>
+std::once_flag Singleton<T>::once_;

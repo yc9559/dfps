@@ -18,8 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "cobridge.h"
 
-DECLARE_SINGLETON(CoBridge)
-
 CoBridge::CoBridge() {}
 
 void CoBridge::Publish(const std::string &theme, const void *data) const {
