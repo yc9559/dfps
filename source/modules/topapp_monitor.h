@@ -29,8 +29,8 @@ public:
     void Start(void);
 
 private:
-    void OnCgroupUpdated(void *data);
-    void OnTopappList(void *data);
+    void OnCgroupUpdated(const void *data);
+    void OnTopappList(const void *data);
 
     int curTopTaskNr_;
     int prevTopTaskNr_;

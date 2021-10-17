@@ -181,7 +181,7 @@ void DynamicFps::AddReactor(void) {
     co->Subscribe("offscreen.state", std::bind(&DynamicFps::OnOffscreen, this, _1));
 }
 
-void DynamicFps::OnInput(void *data) {
+void DynamicFps::OnInput(const void *data) {
     const auto &pressed = CoBridge::Get<bool>(data);
     if (pressed) {
         active_ = true;
@@ -195,7 +195,7 @@ void DynamicFps::OnInput(void *data) {
     }
 }
 
-void DynamicFps::OnInputScene(void *data) {
+void DynamicFps::OnInputScene(const void *data) {
     const auto &input = CoBridge::Get<InputData>(data);
     if (input.inGesture) {
         overridedApp_ = UNIVERSIAL_PKG_NAME;
@@ -210,7 +210,7 @@ void DynamicFps::OnInputScene(void *data) {
     }
 }
 
-void DynamicFps::OnTopAppSwitch(void *data) {
+void DynamicFps::OnTopAppSwitch(const void *data) {
     const auto &topApp = CoBridge::Get<std::string>(data);
     if (topApp != curApp_) {
         curApp_ = topApp;
@@ -219,7 +219,7 @@ void DynamicFps::OnTopAppSwitch(void *data) {
     }
 }
 
-void DynamicFps::OnOffscreen(void *data) {
+void DynamicFps::OnOffscreen(const void *data) {
     const auto &isOff = CoBridge::Get<bool>(data);
     if (isOff != isOffscreen_) {
         isOffscreen_ = isOff;

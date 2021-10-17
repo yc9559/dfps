@@ -32,7 +32,7 @@ void OffscreenMonitor::Start(void) {
     co->Subscribe("cgroup.re.list", std::bind(&OffscreenMonitor::OnRestrictedList, this, _1));
 }
 
-void OffscreenMonitor::OnRestrictedList(void *data) {
+void OffscreenMonitor::OnRestrictedList(const void *data) {
     auto pids = CoBridge::Get<PidList>(data);
     bool isOffscreen = pids.size() > RESTRICTED_TASK_NR_MIN;
     CoBridge::GetInstance()->Publish("offscreen.state", &isOffscreen);

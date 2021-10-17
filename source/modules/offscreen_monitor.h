@@ -26,5 +26,5 @@ public:
     void Start(void);
 
 private:
-    void OnRestrictedList(void *data);
+    void OnRestrictedList(const void *data);
 };

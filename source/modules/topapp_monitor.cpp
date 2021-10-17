@@ -39,7 +39,7 @@ void TopappMonitor::Start(void) {
     co->Subscribe("cgroup.ta.list", std::bind(&TopappMonitor::OnTopappList, this, _1));
 }
 
-void TopappMonitor::OnCgroupUpdated(void *data) {
+void TopappMonitor::OnCgroupUpdated(const void *data) {
     if (timer_.ElapsedMs() < TOP_APP_SWITCH_DELAY_MS) {
         return;
     }
@@ -63,7 +63,7 @@ void TopappMonitor::OnCgroupUpdated(void *data) {
     DelayedWorker::GetInstance()->SetWork(dw_, delayed, GetNowTs() + MsToUs(TOP_APP_SWITCH_DELAY_MS));
 }
 
-void TopappMonitor::OnTopappList(void *data) {
+void TopappMonitor::OnTopappList(const void *data) {
     auto pids = CoBridge::Get<PidList>(data);
     curTopTaskNr_ = pids.size();
 }

@@ -22,7 +22,7 @@ DECLARE_SINGLETON(CoBridge)
 
 CoBridge::CoBridge() {}
 
-void CoBridge::Publish(const std::string &theme, void *data) const {
+void CoBridge::Publish(const std::string &theme, const void *data) const {
     auto it = pubsub_.find(theme);
     if (it != pubsub_.end()) {
         for (const auto &cb : it->second) {

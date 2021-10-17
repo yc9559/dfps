@@ -48,11 +48,11 @@ private:
     std::vector<pollfd> pollfds_;
     std::thread th_;
 
-    bool touchPressed_;
-    bool btnPressed_;
+    InputReader::Info prevTouch_;
+    InputReader::Info prevBtn_;
+    InputData prevClassified_;
     InputData classified_;
 
-    InputReader::Info prevTouch_;
     TimeCounter touchTimer_;
     TimeCounter gestureTimer_;
     float swipeDist_;

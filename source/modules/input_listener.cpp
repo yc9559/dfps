@@ -42,8 +42,6 @@ InputListener::InputListener()
       gesturePctY_(GESTURE_PCT_Y),
       gestureDelayMs_(GESTURE_DELAY_MS),
       holdDelayMs_(HOLD_DELAY_MS),
-      touchPressed_(false),
-      btnPressed_(false),
       swipeDist_(0.0),
       startX_(0.5),
       startY_(0.5) {
@@ -134,23 +132,29 @@ void InputListener::HandleTouchInput(const InputReader::Info &info) {
             startY_ = info.y;
         }
     }
+    if (info.pressed != prevTouch_.pressed) {
+        CoBridge::GetInstance()->Publish("input.touch", &info.pressed);
+    }
     prevTouch_ = info;
-    touchPressed_ = info.pressed;
-    CoBridge::GetInstance()->Publish("input.touch", &touchPressed_);
 
     classified_.inSwipe = swipeDist_ > swipeThd_;
-    classified_.inHold = touchPressed_ && touchTimer_.ElapsedMs() > holdDelayMs_;
+    classified_.inHold = info.pressed && touchTimer_.ElapsedMs() > holdDelayMs_;
     classified_.inGesture = gestureTimer_.ElapsedMs() < gestureDelayMs_;
     if (classified_.inGesture == false && classified_.inSwipe && IsGestureStartPos(startX_, startY_)) {
         gestureTimer_.Reset();
         classified_.inGesture = true;
     }
-    CoBridge::GetInstance()->Publish("input.state", &classified_);
+    if (classified_ != prevClassified_) {
+        CoBridge::GetInstance()->Publish("input.state", &classified_);
+    }
+    prevClassified_ = classified_;
 }
 
 void InputListener::HandleBtnInput(const InputReader::Info &info) {
-    btnPressed_ = info.pressed;
-    CoBridge::GetInstance()->Publish("input.btn", &btnPressed_);
+    if (info.pressed != prevBtn_.pressed) {
+        CoBridge::GetInstance()->Publish("input.btn", &info.pressed);
+    }
+    prevBtn_ = info;
 }
 
 bool InputListener::IsGestureStartPos(float x, float y) {

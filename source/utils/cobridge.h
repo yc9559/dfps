@@ -26,14 +26,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 class CoBridge : public Singleton<CoBridge> {
 public:
-    using SubscribeCallback = std::function<void(void *)>;
+    using SubscribeCallback = std::function<void(const void *)>;
 
     CoBridge();
-    void Publish(const std::string &theme, void *data) const;
+    void Publish(const std::string &theme, const void *data) const;
     void Subscribe(const std::string &theme, const SubscribeCallback &cb);
 
     template <typename T>
-    static const T &Get(void *data) {
+    static const T &Get(const void *data) {
         return *reinterpret_cast<const T *>(data);
     }
 

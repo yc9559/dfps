@@ -41,10 +41,10 @@ private:
     std::string FindInvalidRule(void);
 
     void AddReactor(void);
-    void OnInput(void *data);
-    void OnInputScene(void *data);
-    void OnTopAppSwitch(void *data);
-    void OnOffscreen(void *data);
+    void OnInput(const void *data);
+    void OnInputScene(const void *data);
+    void OnTopAppSwitch(const void *data);
+    void OnOffscreen(const void *data);
 
     void SwitchRefreshRate(void);
     void SwitchRefreshRate(int hz);

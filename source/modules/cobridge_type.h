@@ -28,5 +28,9 @@ struct InputData {
     bool inHold;
     bool inSwipe;
     bool inGesture;
+
     InputData() : inHold(false), inSwipe(false), inGesture(false) {}
+    bool operator!=(const InputData &rhs) {
+        return inHold != rhs.inHold || inSwipe != rhs.inSwipe || inGesture != rhs.inGesture;
+    }
 };
