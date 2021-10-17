@@ -20,14 +20,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <sys/prctl.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/spdlog.h>
 
+#include "utils/backtrace.h"
 #include "utils/inotify.h"
+#include "utils/misc.h"
 #include "utils/misc_android.h"
 
 #include "modules/cgroup_listener.h"
@@ -56,7 +57,7 @@ void InitLogger(void) {
         auto sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logFile, false);
         logger->sinks().emplace_back(sink);
     }
-    logger->set_pattern("%H:%M:%S %L %!: %v");
+    logger->set_pattern("%H:%M:%S %L %v");
     logger->flush_on(spdlog::level::info);
 }
 
@@ -95,20 +96,23 @@ void DfpsMain(void) {
     }
 }
 
-void DfpsSigHandler(int signnum) {
-    if (signnum == TERM_SIG) {
+void DfpsSigHandler(int sig) {
+    if (sig == TERM_SIG) {
         exit(EXIT_SUCCESS);
     }
     exit(EXIT_FAILURE);
+}
+
+void SetSigHandler(void) {
+    SetDumpBacktraceAsCrashHandler();
+    signal(TERM_SIG, DfpsSigHandler);
 }
 
 void StartNewDfps(void) {
     old_pid = dfps_pid;
     new_pid = fork();
     if (new_pid == 0) {
-        signal(TERM_SIG, DfpsSigHandler);
-        signal(SIGTERM, NULL);
-        signal(SIGINT, NULL);
+        SetSigHandler();
         DfpsMain();
     }
 
@@ -224,7 +228,7 @@ int main(int argc, char **argv) {
     pid_t pid = fork();
     if (pid == 0) {
         setsid();
-        prctl(PR_SET_NAME, DAEMON_NAME.c_str());
+        SetSelfThreadName(DAEMON_NAME);
         Daemon();
     }
     return EXIT_SUCCESS;
