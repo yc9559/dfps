@@ -63,6 +63,7 @@ private:
 
     bool touchPressed_;
     bool btnPressed_;
+    bool wakeupBoost_;
     bool active_;
     std::string curApp_;
     std::string overridedApp_;

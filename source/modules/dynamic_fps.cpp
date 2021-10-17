@@ -50,6 +50,7 @@ DynamicFps::DynamicFps(const std::string &configPath)
       hasOffscreen_(false),
       touchPressed_(false),
       btnPressed_(false),
+      wakeupBoost_(false),
       active_(false),
       isOffscreen_(false),
       curHz_(INT32_MAX),
@@ -200,10 +201,11 @@ void DynamicFps::OnInputBtn(const void *data) {
 }
 
 void DynamicFps::OnInput(void) {
-    auto pressed = touchPressed_ || btnPressed_;
+    auto pressed = touchPressed_ || btnPressed_ || wakeupBoost_;
     if (pressed) {
         active_ = true;
         SwitchRefreshRate();
+        DelayedWorker::GetInstance()->SetWork(dwInput_, nullptr, DelayedWorker::SLEEP_TS);
     } else {
         auto enterIdle = [=]() {
             active_ = false;
@@ -218,6 +220,7 @@ void DynamicFps::OnInputScene(const void *data) {
     if (input.inGesture) {
         overridedApp_ = UNIVERSIAL_PKG_NAME;
         SwitchRefreshRate();
+        DelayedWorker::GetInstance()->SetWork(dwGesture_, nullptr, DelayedWorker::SLEEP_TS);
     } else {
         auto resume = [=]() {
             if (overridedApp_ == UNIVERSIAL_PKG_NAME) {
@@ -240,10 +243,19 @@ void DynamicFps::OnTopAppSwitch(const void *data) {
 
 void DynamicFps::OnOffscreen(const void *data) {
     const auto &isOff = CoBridge::Get<bool>(data);
-    if (isOff != isOffscreen_) {
-        isOffscreen_ = isOff;
-        forceSwitch_ = true;
-        overridedApp_ = isOff ? OFFSCREEN_PKG_NAME : "";
+    if (isOff == isOffscreen_) {
+        return;
+    }
+
+    isOffscreen_ = isOff;
+    forceSwitch_ = true;
+    overridedApp_ = isOff ? OFFSCREEN_PKG_NAME : "";
+    if (isOff == false) {
+        wakeupBoost_ = true;
+        OnInput();
+        wakeupBoost_ = false;
+        // leave active without setting up resume
+    } else {
         SwitchRefreshRate();
     }
 }
@@ -268,7 +280,7 @@ void DynamicFps::SwitchRefreshRate(void) {
 void DynamicFps::SwitchRefreshRate(int hz) {
     auto force = forceSwitch_;
     forceSwitch_ = false;
-    SPDLOG_INFO("switch {}", hz);
+    SPDLOG_DEBUG("switch {}", hz);
     if (force == false && hz == curHz_) {
         return;
     }
