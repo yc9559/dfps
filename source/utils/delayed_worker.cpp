@@ -29,6 +29,7 @@ void OnTimerWrapper(union sigval v) { DelayedWorker::GetInstance()->_OnTimer(); 
 DelayedWorker::DelayedWorker() : timerId_(nullptr), isThreadInited_(false) {
     constexpr int SIVAL_INT_DEFAULT = 111;
     struct sigevent evp;
+    memset(&evp, 0, sizeof(struct sigevent));
     evp.sigev_value.sival_int = SIVAL_INT_DEFAULT;
     evp.sigev_notify = SIGEV_THREAD;
     evp.sigev_notify_function = OnTimerWrapper;

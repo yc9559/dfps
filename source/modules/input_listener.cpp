@@ -23,7 +23,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <dirent.h>
 #include <fcntl.h>
 #include <spdlog/spdlog.h>
-#include <sys/stat.h>
 
 constexpr char MODULE_NAME[] = "InputListener";
 constexpr char INPUT_DEV_DIR[] = "/dev/input";
@@ -67,12 +66,12 @@ void InputListener::Start(void) {
                 }
                 int fd = pfd.fd;
                 auto &reader = readers_.at(fd);
-                switch (reader.GetProp().devType) {
+                switch (reader->GetProp().devType) {
                     case InputReader::DevType::TOUCH_PANEL:
-                        reader.Parse(touchHandler);
+                        reader->Parse(touchHandler);
                         break;
                     case InputReader::DevType::BTN:
-                        reader.Parse(btnHandler);
+                        reader->Parse(btnHandler);
                         break;
                     default:
                         break;
@@ -94,12 +93,11 @@ void InputListener::InitReaders(void) {
         }
         snprintf(path, sizeof(path), "%s/%s", INPUT_DEV_DIR, dp->d_name);
         try {
-            InputReader reader(path);
-            const auto &prop = reader.GetProp();
-            int fd = prop.fd;
-            readers_.emplace(fd, reader);
-            AddPoll(fd);
-            SPDLOG_INFO("Listening {} device '{}'", std::to_string(prop.devType), prop.name);
+            auto reader = std::make_unique<InputReader>(path);
+            auto prop = reader->GetProp();
+            AddPoll(prop.fd);
+            readers_.emplace(prop.fd, std::move(reader));
+            SPDLOG_INFO("Listening {} '{}'", std::to_string(prop.devType), prop.name);
         } catch (const std::exception &e) {
             // SPDLOG_INFO("Skip unsupported input device '{}'", path);
         }
@@ -109,6 +107,7 @@ void InputListener::InitReaders(void) {
 
 void InputListener::AddPoll(int fd) {
     pollfd pfd;
+    memset(&pfd, 0, sizeof(pfd));
     pfd.fd = fd;
     pfd.events = POLLIN;
     pollfds_.emplace_back(pfd);
@@ -146,6 +145,8 @@ void InputListener::HandleTouchInput(const InputReader::Info &info) {
         classified_.inGesture = true;
     }
     if (classified_ != prevClassified_) {
+        SPDLOG_DEBUG("input.state hold={} swipe={} gesture={}", classified_.inHold, classified_.inSwipe,
+                     classified_.inGesture);
         CoBridge::GetInstance()->Publish("input.state", &classified_);
     }
     prevClassified_ = classified_;

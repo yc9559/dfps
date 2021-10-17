@@ -35,6 +35,7 @@ private:
     int curTopTaskNr_;
     int prevTopTaskNr_;
     TimeCounter timer_;
+    std::string prevPkgName_;
     HeavyWorker::Handle hw_;
     DelayedWorker::Handle dw_;
 };

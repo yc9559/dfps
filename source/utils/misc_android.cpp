@@ -24,11 +24,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sys/wait.h>
 #include <unistd.h>
 #include <vector>
+#include "utils/misc.h"
 
 std::string GetTopAppNameDumpsys(void) {
     constexpr char DUMPSYS_CMD[] = "/system/bin/dumpsys activity o";
-    constexpr char TA_KEYWORD[] = "(top-activity)";
-    constexpr int DUMPSYS_EXEC_WAIT_US = 80 * 1000;
+    constexpr char TA_KEYWORD[] = " (top-activity)";
+    constexpr int DUMPSYS_EXEC_WAIT_US = MsToUs(80);
     constexpr std::size_t BUF_SIZE = 256 * 1024;
 
     FILE *fs = popen(DUMPSYS_CMD, "r");
@@ -159,10 +160,10 @@ void SyncCallPutRefreshRate(const char *key, const char *hz) {
     if (pid == -1) {
         return;
     } else if (pid == 0) {
-        execl("/system/bin/cmd", "/system/bin/cmd", "settings", "put", "system", key, hz, NULL);
+        execl("/system/bin/cmd", "/system/bin/cmd", "settings", "put", "system", key, hz, nullptr);
         exit(-1);
     } else {
-        waitpid(pid, NULL, 0);
+        waitpid(pid, nullptr, 0);
     }
 }
 
@@ -171,10 +172,10 @@ void SyncCallSurfaceflingerBackdoor(const char *code, const char *hz) {
     if (pid == -1) {
         return;
     } else if (pid == 0) {
-        execl("/system/bin/service", "/system/bin/service", "call", "SurfaceFlinger", code, "i32", hz, NULL);
+        execl("/system/bin/service", "/system/bin/service", "call", "SurfaceFlinger", code, "i32", hz, nullptr);
         exit(-1);
     } else {
-        waitpid(pid, NULL, 0);
+        waitpid(pid, nullptr, 0);
     }
 }
 

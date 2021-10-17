@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <sys/poll.h>
 #include <thread>
+#include <memory>
 
 class InputListener {
 public:
@@ -44,7 +45,7 @@ private:
     int gestureDelayMs_;
     int holdDelayMs_;
 
-    std::map<int, InputReader> readers_;
+    std::map<int, std::unique_ptr<InputReader>> readers_;
     std::vector<pollfd> pollfds_;
     std::thread th_;
 

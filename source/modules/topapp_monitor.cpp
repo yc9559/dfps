@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "utils/cobridge.h"
 #include "utils/misc.h"
 #include "utils/misc_android.h"
+#include <spdlog/spdlog.h>
 
 constexpr char MODULE_NAME[] = "TopappMonitor";
 constexpr int64_t TOP_APP_SWITCH_DELAY_MS = 1000;
@@ -51,12 +52,16 @@ void TopappMonitor::OnCgroupUpdated(const void *data) {
         if (delta < TOP_TASK_NR_DIFF_MIN) {
             return;
         }
-        auto heavywork = []() {
+        auto heavywork = [this]() {
             auto pkgName = GetTopAppNameDumpsys();
             if (pkgName.empty()) {
                 return;
             }
-            CoBridge::GetInstance()->Publish("topapp.pkgName", &pkgName);
+            if (pkgName != prevPkgName_) {
+                prevPkgName_ = pkgName;
+                SPDLOG_DEBUG("topapp.pkgName {}", pkgName);
+                CoBridge::GetInstance()->Publish("topapp.pkgName", &pkgName);
+            }
         };
         HeavyWorker::GetInstance()->SetWork(hw_, heavywork);
     };

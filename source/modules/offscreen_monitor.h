@@ -27,4 +27,5 @@ public:
 
 private:
     void OnRestrictedList(const void *data);
+    bool prevOffscreen_;
 };

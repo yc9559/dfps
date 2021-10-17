@@ -41,6 +41,7 @@ InputReader::InputReader(const std::string &path) : buf_(sizeof(input_event) * I
     } else if (IsBtnDev()) {
         ReadBtnProp();
     } else {
+        close(prop_.fd);
         throw FmtException("Unknown input device {}", path);
     }
 }
@@ -57,8 +58,9 @@ void InputReader::Parse(const std::function<void(const Info &)> &onSync) {
     info_.ts = GetNowTs();
 
     size_t len = read(prop_.fd, buf_.data(), buf_.size());
-    for (size_t i = 0; i < len; i += sizeof(input_event)) {
-        const auto &evt = *reinterpret_cast<input_event *>(buf_.data() + i);
+    size_t nr = len / sizeof(input_event);
+    for (size_t i = 0; i < nr; i++) {
+        const auto &evt = *(reinterpret_cast<input_event *>(buf_.data()) + i);
         switch (evt.type) {
             case EV_SYN:
                 if (onSync) {
@@ -145,7 +147,7 @@ void InputReader::ReadTouchpanelProp() {
     auto fd = prop_.fd;
     prop_.devType = DevType::TOUCH_PANEL;
 
-    char name[64];
+    char name[64] = {0};
     ioctl(fd, EVIOCGNAME(sizeof(name)), name);
     prop_.name = name;
 
@@ -164,7 +166,7 @@ void InputReader::ReadBtnProp() {
     auto fd = prop_.fd;
     prop_.devType = DevType::BTN;
 
-    char name[64];
+    char name[64] = {0};
     ioctl(fd, EVIOCGNAME(sizeof(name)), name);
     prop_.name = name;
 }

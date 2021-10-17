@@ -58,6 +58,7 @@ void InitLogger(void) {
         logger->sinks().emplace_back(sink);
     }
     logger->set_pattern("%H:%M:%S %L %v");
+    logger->set_level(spdlog::level::debug);
     logger->flush_on(spdlog::level::info);
 }
 
@@ -78,21 +79,25 @@ void PrintTombstone(int pid) {
 }
 
 void DfpsMain(void) {
-    SPDLOG_INFO("New dfps is running");
+    try {
+        InputListener input;
+        input.Start();
+        CgroupListener cgroup;
+        cgroup.Start();
+        TopappMonitor topapp;
+        topapp.Start();
+        OffscreenMonitor offscreen;
+        offscreen.Start();
+        DynamicFps dfps(configFile);
+        dfps.Start();
 
-    InputListener input;
-    input.Start();
-    CgroupListener cgroup;
-    cgroup.Start();
-    TopappMonitor topapp;
-    topapp.Start();
-    OffscreenMonitor offscreen;
-    offscreen.Start();
-    DynamicFps dfps(configFile);
-    dfps.Start();
-
-    for (;;) {
-        sleep(UINT32_MAX);
+        SPDLOG_INFO("Dfps is running");
+        for (;;) {
+            sleep(UINT32_MAX);
+        }
+    } catch (const std::exception &e) {
+        SPDLOG_ERROR("Exception thrown '{}'", e.what());
+        exit(EXIT_FAILURE);
     }
 }
 

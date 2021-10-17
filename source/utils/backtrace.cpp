@@ -79,7 +79,7 @@ int RecordFrameClang(UnwindClang *self, uintptr_t pc) {
             }
         }
     }
-    SPDLOG_ERROR("#{:02}: {:#08x} {}", self->frame_num, addr, symbol);
+    SPDLOG_ERROR("#{:02}: {:#016x} {}", self->frame_num, addr, symbol);
 
     // check unwinding limit
     self->frame_num++;

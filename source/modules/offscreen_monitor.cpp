@@ -20,11 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "utils/cobridge.h"
 #include "utils/misc.h"
 #include "utils/misc_android.h"
+#include <spdlog/spdlog.h>
 
 // constexpr char MODULE_NAME[] = "OffscreenMonitor";
 constexpr int RESTRICTED_TASK_NR_MIN = 10;
 
-OffscreenMonitor::OffscreenMonitor() {}
+OffscreenMonitor::OffscreenMonitor() : prevOffscreen_(false) {}
 
 void OffscreenMonitor::Start(void) {
     using namespace std::placeholders;
@@ -35,5 +36,9 @@ void OffscreenMonitor::Start(void) {
 void OffscreenMonitor::OnRestrictedList(const void *data) {
     auto pids = CoBridge::Get<PidList>(data);
     bool isOffscreen = pids.size() > RESTRICTED_TASK_NR_MIN;
-    CoBridge::GetInstance()->Publish("offscreen.state", &isOffscreen);
+    if (isOffscreen != prevOffscreen_) {
+        prevOffscreen_ = isOffscreen;
+        SPDLOG_DEBUG("offscreen.state {}", isOffscreen);
+        CoBridge::GetInstance()->Publish("offscreen.state", &isOffscreen);
+    }
 }

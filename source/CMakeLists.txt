@@ -11,6 +11,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Release")
     set(LINKER_FLAGS "${LINKER_FLAGS} -O3 -flto -fvisibility=hidden -fvisibility-inlines-hidden -Wl,--strip-all")
 else ()
     add_definitions(-DDEBUG)
+    add_definitions(-DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE)
 endif ()
 
 file(GLOB_RECURSE SRCS

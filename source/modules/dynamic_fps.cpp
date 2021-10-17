@@ -36,9 +36,9 @@ std::string Trim(const std::string &str) {
     if (str.empty()) {
         return str;
     }
-    auto firstScan = str.find_first_not_of(' ');
+    auto firstScan = str.find_first_not_of(" \n\r");
     auto first = (firstScan == std::string::npos) ? str.length() : firstScan;
-    auto last = str.find_last_not_of(' ');
+    auto last = str.find_last_not_of(" \n\r");
     return str.substr(first, last - first + 1);
 }
 
@@ -113,6 +113,7 @@ void DynamicFps::ParseLine(const std::string &line) {
     } else if (isTunable(line)) {
         // /touchSlackMs 3000
         if (sscanf(line.c_str(), "/%s %s", name, value) == 2) {
+            SPDLOG_DEBUG("Set '{}'={}", name, value);
             SetTunable(name, value);
         } else {
             SPDLOG_WARN("Skipped broken line '{}'", line);
@@ -155,8 +156,11 @@ void DynamicFps::SetTunable(const std::string &tunable, const std::string &value
 }
 
 std::string DynamicFps::FindInvalidRule(void) {
+    auto isDefaultRule = [](const FpsRule &rule) { return rule.idle == -1 && rule.active == -1; };
     auto isSfBackdoorRule = [](const FpsRule &rule) { return rule.idle < 20 && rule.active < 20; };
-    auto isInvalid = [=](const FpsRule &rule) { return useSfBackdoor_ != isSfBackdoorRule(rule); };
+    auto isInvalid = [=](const FpsRule &rule) {
+        return isDefaultRule(rule) == false && useSfBackdoor_ != isSfBackdoorRule(rule);
+    };
 
     if (isInvalid(offscreen_)) {
         return "offscreen";
@@ -263,6 +267,7 @@ void DynamicFps::SwitchRefreshRate(void) {
 void DynamicFps::SwitchRefreshRate(int hz) {
     auto force = forceSwitch_;
     forceSwitch_ = false;
+    SPDLOG_INFO("switch {}", hz);
     if (force == false && hz == curHz_) {
         return;
     }
