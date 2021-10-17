@@ -33,7 +33,7 @@
 # 分应用动态刷新率配置
 # Per-app dynamic screen refresh rate rule
 com.hypergryph.arknights 60 60
-- 120 120
+- -1 -1
 * 60 120
 
 # 使用Surfaceflinger backdoor法切换屏幕刷新率
@@ -42,4 +42,4 @@ com.hypergryph.arknights 60 60
 
 # 触摸松开后等待touchSlackMs毫秒进入空闲状态
 # Wait for touchSlackMs ms to enter the idle state after the touch is released
-/touchSlackMs 3000
+/touchSlackMs 4000

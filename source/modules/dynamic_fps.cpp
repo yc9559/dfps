@@ -25,8 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <spdlog/spdlog.h>
 
 constexpr char MODULE_NAME[] = "DynamicFps";
-constexpr int64_t DEFAULT_GESTURE_SLACK_MS = 3000;
-constexpr int64_t DEFAULT_TOUCH_SLACK_MS = 3000;
+constexpr int64_t DEFAULT_GESTURE_SLACK_MS = 4000;
+constexpr int64_t DEFAULT_TOUCH_SLACK_MS = 4000;
 constexpr bool DEFAULT_USE_SF_BACKDOOR = false;
 constexpr int MIN_TOUCH_SLACK_MS = 100;
 constexpr char UNIVERSIAL_PKG_NAME[] = "*";
@@ -111,7 +111,7 @@ void DynamicFps::ParseLine(const std::string &line) {
     if (line.empty() || isComment(line)) {
         return;
     } else if (isTunable(line)) {
-        // /touchSlackMs 3000
+        // /touchSlackMs 4000
         if (sscanf(line.c_str(), "/%s %s", name, value) == 2) {
             SPDLOG_DEBUG("Set '{}'={}", name, value);
             SetTunable(name, value);
