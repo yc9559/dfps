@@ -33,6 +33,9 @@ constexpr int64_t SCAN_CGROUP_MIN_INTERVAL_MS = 100;
 
 CgroupListener::CgroupListener() {
     using namespace std::placeholders;
+    dw_ = DelayedWorker::GetInstance()->Create(MODULE_NAME);
+    hw_ = HeavyWorker::GetInstance()->Create(MODULE_NAME);
+
     inoti_.Add(TOP_PATH, WATCH_FLAG, std::bind(&CgroupListener::OnTaModified, this, _1, _2));
     inoti_.Add(FG_PATH, WATCH_FLAG, std::bind(&CgroupListener::OnFgModified, this, _1, _2));
     inoti_.Add(BG_PATH, WATCH_FLAG, std::bind(&CgroupListener::OnBgModified, this, _1, _2));
@@ -50,43 +53,48 @@ void CgroupListener::Start(void) {
     th_.detach();
 }
 
-void UpdatePidList(PidList *pl, const std::string &path) {
-    GetUnsignedIntFromFile(path, pl);
-    std::sort(pl->begin(), pl->end());
-}
-
 void CgroupListener::OnTaModified(const std::string &, int) {
     CoBridge::GetInstance()->Publish("cgroup.ta.update", nullptr);
-    if (taTimer_.ElapsedMs() > SCAN_CGROUP_MIN_INTERVAL_MS) {
-        taTimer_.Reset();
-        UpdatePidList(&ta_, TOP_PATH);
-        CoBridge::GetInstance()->Publish("cgroup.ta.list", &ta_);
-    }
+    UpdatePidList();
 }
 
 void CgroupListener::OnFgModified(const std::string &, int) {
     CoBridge::GetInstance()->Publish("cgroup.fg.update", nullptr);
-    if (fgTimer_.ElapsedMs() > SCAN_CGROUP_MIN_INTERVAL_MS) {
-        fgTimer_.Reset();
-        UpdatePidList(&fg_, FG_PATH);
-        CoBridge::GetInstance()->Publish("cgroup.fg.list", &fg_);
-    }
+    UpdatePidList();
 }
 
 void CgroupListener::OnBgModified(const std::string &, int) {
     CoBridge::GetInstance()->Publish("cgroup.bg.update", nullptr);
-    if (bgTimer_.ElapsedMs() > SCAN_CGROUP_MIN_INTERVAL_MS) {
-        bgTimer_.Reset();
-        UpdatePidList(&bg_, BG_PATH);
-        CoBridge::GetInstance()->Publish("cgroup.bg.list", &bg_);
-    }
+    UpdatePidList();
 }
 
 void CgroupListener::OnReModified(const std::string &, int) {
     CoBridge::GetInstance()->Publish("cgroup.re.update", nullptr);
-    if (reTimer_.ElapsedMs() > SCAN_CGROUP_MIN_INTERVAL_MS) {
-        reTimer_.Reset();
-        UpdatePidList(&re_, RE_PATH);
-        CoBridge::GetInstance()->Publish("cgroup.re.list", &re_);
+    UpdatePidList();
+}
+
+void CgroupListener::UpdatePidList(void) {
+    if (pidListTimer_.ElapsedMs() < SCAN_CGROUP_MIN_INTERVAL_MS) {
+        return;
     }
+    pidListTimer_.Reset();
+
+    auto delayed = [this]() {
+        auto heavywork = [this]() {
+            auto updatePidList = [](PidList *pl, const std::string &path) {
+                GetUnsignedIntFromFile(path, pl);
+                std::sort(pl->begin(), pl->end());
+            };
+            updatePidList(&ta_, TOP_PATH);
+            CoBridge::GetInstance()->Publish("cgroup.ta.list", &ta_);
+            updatePidList(&fg_, FG_PATH);
+            CoBridge::GetInstance()->Publish("cgroup.fg.list", &ta_);
+            updatePidList(&bg_, BG_PATH);
+            CoBridge::GetInstance()->Publish("cgroup.bg.list", &ta_);
+            updatePidList(&re_, RE_PATH);
+            CoBridge::GetInstance()->Publish("cgroup.re.list", &ta_);
+        };
+        HeavyWorker::GetInstance()->SetWork(hw_, heavywork);
+    };
+    DelayedWorker::GetInstance()->SetWork(dw_, delayed, GetNowTs() + MsToUs(SCAN_CGROUP_MIN_INTERVAL_MS));
 }

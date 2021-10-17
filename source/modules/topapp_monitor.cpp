@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "utils/misc.h"
 #include "utils/misc_android.h"
 
-constexpr char MODULE_NAME[] = "CgroupListener";
+constexpr char MODULE_NAME[] = "TopappMonitor";
 constexpr int64_t TOP_APP_SWITCH_DELAY_MS = 1000;
 constexpr int TOP_TASK_NR_DIFF_MIN = 10;
 

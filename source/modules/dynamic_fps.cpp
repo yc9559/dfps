@@ -178,7 +178,7 @@ void DynamicFps::AddReactor(void) {
     co->Subscribe("input.btn", std::bind(&DynamicFps::OnInput, this, _1));
     co->Subscribe("input.state", std::bind(&DynamicFps::OnInputScene, this, _1));
     co->Subscribe("topapp.pkgName", std::bind(&DynamicFps::OnTopAppSwitch, this, _1));
-    co->Subscribe("", std::bind(&DynamicFps::OnOffscreen, this, _1));
+    co->Subscribe("offscreen.state", std::bind(&DynamicFps::OnOffscreen, this, _1));
 }
 
 void DynamicFps::OnInput(void *data) {

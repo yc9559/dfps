@@ -19,33 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include "cobridge_type.h"
-#include "utils/inotify.h"
-#include "utils/time_counter.h"
-#include "utils/heavy_worker.h"
-#include "utils/delayed_worker.h"
-#include <thread>
 
-class CgroupListener {
+class OffscreenMonitor {
 public:
-    CgroupListener();
+    OffscreenMonitor();
     void Start(void);
 
 private:
-    void OnTaModified(const std::string &, int);
-    void OnFgModified(const std::string &, int);
-    void OnBgModified(const std::string &, int);
-    void OnReModified(const std::string &, int);
-    void UpdatePidList(void);
-
-    Inotify inoti_;
-    HeavyWorker::Handle hw_;
-    DelayedWorker::Handle dw_;
-    std::thread th_;
-
-    PidList ta_;
-    PidList fg_;
-    PidList bg_;
-    PidList re_;
-
-    TimeCounter pidListTimer_;
+    void OnRestrictedList(void *data);
 };
