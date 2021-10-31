@@ -50,13 +50,13 @@ DynamicFps::DynamicFps(const std::string &configPath)
       hasOffscreen_(false),
       touchPressed_(false),
       btnPressed_(false),
-      wakeupBoost_(false),
       active_(false),
       isOffscreen_(false),
       curHz_(INT32_MAX),
       forceSwitch_(false) {
     dwInput_ = DelayedWorker::GetInstance()->Create(MODULE_NAME);
     dwGesture_ = DelayedWorker::GetInstance()->Create(MODULE_NAME);
+    dwWakeup_ = DelayedWorker::GetInstance()->Create(MODULE_NAME);
     hw_ = HeavyWorker::GetInstance()->Create(MODULE_NAME);
     LoadConfig(configPath);
 }
@@ -201,7 +201,7 @@ void DynamicFps::OnInputBtn(const void *data) {
 }
 
 void DynamicFps::OnInput(void) {
-    auto pressed = touchPressed_ || btnPressed_ || wakeupBoost_;
+    auto pressed = touchPressed_ || btnPressed_;
     if (pressed) {
         active_ = true;
         SwitchRefreshRate();
@@ -248,15 +248,19 @@ void DynamicFps::OnOffscreen(const void *data) {
     }
 
     isOffscreen_ = isOff;
-    forceSwitch_ = true;
-    overridedApp_ = isOff ? OFFSCREEN_PKG_NAME : "";
-    if (isOff == false) {
-        wakeupBoost_ = true;
-        OnInput();
-        wakeupBoost_ = false;
-        // leave active without setting up resume
-    } else {
+    if (isOff) {
+        overridedApp_ = OFFSCREEN_PKG_NAME;
+        forceSwitch_ = true;
         SwitchRefreshRate();
+    } else {
+        auto exitOffscreen = [=]() {
+            if (overridedApp_ == OFFSCREEN_PKG_NAME) {
+                overridedApp_ = "";
+                forceSwitch_ = true;
+                SwitchRefreshRate();
+            }
+        };
+        DelayedWorker::GetInstance()->SetWork(dwWakeup_, exitOffscreen, GetNowTs() + MsToUs(gestureSlackMs_));
     }
 }
 

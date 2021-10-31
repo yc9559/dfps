@@ -63,7 +63,6 @@ private:
 
     bool touchPressed_;
     bool btnPressed_;
-    bool wakeupBoost_;
     bool active_;
     std::string curApp_;
     std::string overridedApp_;
@@ -73,5 +72,6 @@ private:
 
     DelayedWorker::Handle dwInput_;
     DelayedWorker::Handle dwGesture_;
+    DelayedWorker::Handle dwWakeup_;
     HeavyWorker::Handle hw_;
 };
