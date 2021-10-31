@@ -40,7 +40,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 static const std::string DAEMON_NAME = "Dfpsd";
 static const std::string PROC_NAME = "Dfps";
 static const std::string PROJECT_URL = "https://github.com/yc9559/dfps";
-static const std::string VERSION = "21.09.25";
+static const std::string VERSION = "21.10.31";
 static constexpr int TERM_SIG = SIGUSR1;
 
 std::string configFile;
