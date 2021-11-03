@@ -6,12 +6,12 @@
 # Two method are supported. Method chosing based on the value
 
 # 方法1: PEAK_REFRESH_RATE法，值>=20
-# Method 1: PEAK_REFRESH_RATE, value in [0, 20)
+# Method 1: PEAK_REFRESH_RATE, value in [20, +inf)
 # 值: 系统支持的刷新率，请不要设置系统不支持的帧率
 # Value: refresh rate supported by system, do not use the value not supported by system
 
 # 方法2: Surfaceflinger backdoor法，值<20
-# Method 2: Surfaceflinger backdoor, value in [20, +inf)
+# Method 2: Surfaceflinger backdoor, value in [0, 20)
 # 值: 系统支持的刷新率索引，0/1/2/...对应的帧率需要自行尝试。
 # Value: refresh rate index supported by system, correspondence varies from systems
 # 以下为几种可能的值与刷新率的对应关系，供参考
