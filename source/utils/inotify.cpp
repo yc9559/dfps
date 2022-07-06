@@ -1,22 +1,21 @@
 /*
-Dfps
-Copyright (C) 2021 Matt Yang(yccy@outlook.com)
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2021-2022 Matt Yang
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "inotify.h"
+#include "atrace.h"
 #include "fmt_exception.h"
 #include <fcntl.h>
 #include <sys/inotify.h>
@@ -30,7 +29,7 @@ constexpr std::size_t EVT_BUF_SIZE = 65536;
 Inotify::Inotify() : buf_(EVT_BUF_SIZE) {
     fd_ = inotify_init();
     if (fd_ < 0) {
-        throw FmtException("Cannot make inotifier handle");
+        throw FmtException("Cannot make inotify handle");
     }
 }
 
@@ -57,6 +56,7 @@ void Inotify::Add(const std::string &path, int mask, Notifier notifier) {
 
 void Inotify::WaitAndHandle(void) {
     auto len = read(fd_, buf_.data(), buf_.size());
+    ATRACE_SCOPE(InotifyHandle);
     ssize_t off = 0;
     while (off < len) {
         auto evt = reinterpret_cast<struct inotify_event *>(buf_.data() + off);
@@ -66,6 +66,10 @@ void Inotify::WaitAndHandle(void) {
             continue;
         }
         const auto &item = it->second;
+        // AtraceScopeHelper ____ash(item.path);
+        if (item.notifier && (evt->mask & item.mask)) {
+            item.notifier(evt->len ? evt->name : item.path, evt->mask);
+        }
         // re-establish watching after deleting
         if (evt->mask & (IGNORED | DELETE_SELF | MOVE_SELF)) {
             const auto &path = item.path.c_str();
@@ -81,9 +85,6 @@ void Inotify::WaitAndHandle(void) {
             auto wd = inotify_add_watch(fd_, path, item.mask);
             items_[wd] = item;
             items_.erase(evt->wd);
-        }
-        if (item.notifier && (evt->mask & item.mask)) {
-            item.notifier(item.path, evt->mask);
         }
     }
 }

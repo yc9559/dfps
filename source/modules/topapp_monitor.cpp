@@ -1,58 +1,53 @@
 /*
-Dfps
-Copyright (C) 2021 Matt Yang(yccy@outlook.com)
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2021-2022 Matt Yang
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "topapp_monitor.h"
-#include "utils/cobridge.h"
+#include "utils/atrace.h"
 #include "utils/misc.h"
 #include "utils/misc_android.h"
 #include <spdlog/spdlog.h>
 
 constexpr char MODULE_NAME[] = "TopappMonitor";
-constexpr int64_t TOP_APP_SWITCH_DELAY_MS = 1000;
-constexpr int TOP_TASK_NR_DIFF_MIN = 10;
+constexpr int64_t TOP_APP_SWITCH_DELAY_MS = 800;
+constexpr size_t TOP_TASK_NR_DIFF_MIN = 10;
 
-TopappMonitor::TopappMonitor() : curTopTaskNr_(0), prevTopTaskNr_(0) {
-    dw_ = DelayedWorker::GetInstance()->Create(MODULE_NAME);
-    hw_ = HeavyWorker::GetInstance()->Create(MODULE_NAME);
-}
+TopappMonitor::TopappMonitor() : topappNr_(0), hw_(HwCreate(MODULE_NAME)), dw_(DwCreate(MODULE_NAME)) {}
+
+TopappMonitor::~TopappMonitor() {}
 
 void TopappMonitor::Start(void) {
     using namespace std::placeholders;
-    auto co = CoBridge::GetInstance();
-    co->Subscribe("cgroup.ta.update", std::bind(&TopappMonitor::OnCgroupUpdated, this, _1));
-    co->Subscribe("cgroup.fg.update", std::bind(&TopappMonitor::OnCgroupUpdated, this, _1));
-    co->Subscribe("cgroup.bg.update", std::bind(&TopappMonitor::OnCgroupUpdated, this, _1));
-    co->Subscribe("cgroup.ta.list", std::bind(&TopappMonitor::OnTopappList, this, _1));
+    CoSubscribe("cgroup.ta.list", std::bind(&TopappMonitor::OnTopappList, this, _1));
 }
 
-void TopappMonitor::OnCgroupUpdated(const void *data) {
-    if (timer_.ElapsedMs() < TOP_APP_SWITCH_DELAY_MS) {
+void TopappMonitor::OnTopappList(const void *data) {
+    if (CoHasSubscriber("topapp.pkgName") == false) {
         return;
     }
-    timer_.Reset();
+
+    const auto &pl = CoBridge::Get<PidList>(data);
+    auto nr = static_cast<int>(pl.size());
+    if (std::abs(nr - topappNr_) <= TOP_TASK_NR_DIFF_MIN) {
+        return;
+    }
+    topappNr_ = nr;
 
     auto delayed = [this]() {
-        int delta = std::abs(curTopTaskNr_ - prevTopTaskNr_);
-        prevTopTaskNr_ = curTopTaskNr_;
-        if (delta < TOP_TASK_NR_DIFF_MIN) {
-            return;
-        }
         auto heavywork = [this]() {
+            ATRACE_SCOPE(GetTopAppName);
             auto pkgName = GetTopAppNameDumpsys();
             if (pkgName.empty()) {
                 return;
@@ -60,15 +55,10 @@ void TopappMonitor::OnCgroupUpdated(const void *data) {
             if (pkgName != prevPkgName_) {
                 prevPkgName_ = pkgName;
                 SPDLOG_DEBUG("topapp.pkgName {}", pkgName);
-                CoBridge::GetInstance()->Publish("topapp.pkgName", &pkgName);
+                CoPublish("topapp.pkgName", &pkgName);
             }
         };
-        HeavyWorker::GetInstance()->SetWork(hw_, heavywork);
+        HwSetWork(hw_, heavywork);
     };
-    DelayedWorker::GetInstance()->SetWork(dw_, delayed, GetNowTs() + MsToUs(TOP_APP_SWITCH_DELAY_MS));
-}
-
-void TopappMonitor::OnTopappList(const void *data) {
-    auto pids = CoBridge::Get<PidList>(data);
-    curTopTaskNr_ = pids.size();
+    DwSetWork(dw_, delayed, GetNowTs() + MsToUs(TOP_APP_SWITCH_DELAY_MS));
 }

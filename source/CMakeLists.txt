@@ -24,7 +24,7 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${CMAKE_SOURCE_DI
 
 add_executable(dfps ${SRCS} ${CMAKE_CURRENT_BINARY_DIR}/version.c)
 target_include_directories(dfps PRIVATE ${INCS})
-target_link_libraries(dfps PRIVATE spdlog)
+target_link_libraries(dfps PRIVATE spdlog scn)
 
 set(THIS_COMPILE_FLAGS
     -Wall -Werror -fdata-sections -ffunction-sections -fno-threadsafe-statics -fno-omit-frame-pointer

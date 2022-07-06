@@ -1,20 +1,18 @@
 /*
-Dfps
-Copyright (C) 2021 Matt Yang(yccy@outlook.com)
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2021-2022 Matt Yang
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <getopt.h>
 #include <iostream>
@@ -26,30 +24,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/spdlog.h>
 
-#include "utils/backtrace.h"
+#include "dfps.h"
 #include "utils/inotify.h"
 #include "utils/misc.h"
 #include "utils/misc_android.h"
+#include "version.h"
 
-#include "modules/cgroup_listener.h"
-#include "modules/dynamic_fps.h"
-#include "modules/input_listener.h"
-#include "modules/offscreen_monitor.h"
-#include "modules/topapp_monitor.h"
-
-static const std::string DAEMON_NAME = "Dfpsd";
-static const std::string PROC_NAME = "Dfps";
-static const std::string PROJECT_URL = "https://github.com/yc9559/dfps";
-static const std::string VERSION = "21.10.31";
-static constexpr int TERM_SIG = SIGUSR1;
+constexpr char PROC_NAME[] = "dfps";
+constexpr char AUTHOR[] = "Matt Yang (yccy@outlook.com)";
+constexpr char HELP_DESC[] =
+    "Dynamic screen refresh rate controller for Android 10+. Details see https://github.com/yc9559/dfps.\n"
+    "Usage: dfps [-o log_file] config_file";
+constexpr char VERSION[] = "v1(21.10.31)";
+constexpr int TERM_SIG = SIGUSR1;
 
 std::string configFile;
 std::string logFile;
 
-static pid_t dfps_pid;
 static pid_t dead_pid;
 static pid_t new_pid;
 static pid_t old_pid;
+
+Dfps dfps;
 
 void InitLogger(void) {
     auto logger = spdlog::default_logger();
@@ -79,55 +75,50 @@ void PrintTombstone(int pid) {
     SPDLOG_ERROR(">>> End of tombstone {} <<<", pid);
 }
 
-void DfpsMain(void) {
-    try {
-        InputListener input;
-        input.Start();
-        CgroupListener cgroup;
-        cgroup.Start();
-        TopappMonitor topapp;
-        topapp.Start();
-        OffscreenMonitor offscreen;
-        offscreen.Start();
-        DynamicFps dfps(configFile);
-        dfps.Start();
+void AppMainMayThrow(void) {
+    dfps.Load(configFile);
+    dfps.Start();
+    for (;;) {
+        Sleep(UINT32_MAX);
+    }
+}
 
-        SPDLOG_INFO("Dfps is running");
-        for (;;) {
-            sleep(UINT32_MAX);
-        }
+void AppMain(void) {
+    try {
+        AppMainMayThrow();
     } catch (const std::exception &e) {
-        SPDLOG_ERROR("Exception thrown '{}'", e.what());
+        SPDLOG_ERROR("Exception thrown: {}", e.what());
         exit(EXIT_FAILURE);
     }
 }
 
-void DfpsSigHandler(int sig) {
+void AppSigHandler(int sig) {
     if (sig == TERM_SIG) {
         exit(EXIT_SUCCESS);
     }
     exit(EXIT_FAILURE);
 }
 
-void SetSigHandler(void) {
-    SetDumpBacktraceAsCrashHandler();
-    signal(TERM_SIG, DfpsSigHandler);
-}
+void SetSigHandler(void) { signal(TERM_SIG, AppSigHandler); }
 
-void StartNewDfps(void) {
-    old_pid = dfps_pid;
+void StartNewApp(void) {
     new_pid = fork();
     if (new_pid == 0) {
-        SetSelfThreadName(PROC_NAME);
         SetSigHandler();
-        DfpsMain();
+        AppMain();
     }
 
-    sleep(1);
+    Sleep(SToUs(1.0));
     if (new_pid != dead_pid) {
-        dfps_pid = new_pid;
+        old_pid = new_pid;
     } else {
-        SPDLOG_INFO("Failed to start dfps(pid={})", new_pid);
+        SPDLOG_INFO("Failed to start {}(pid={})", PROC_NAME, new_pid);
+    }
+}
+
+void KillOldApp(void) {
+    if (old_pid) {
+        kill(old_pid, TERM_SIG);
     }
 }
 
@@ -142,9 +133,9 @@ void DaemonSigHandler(int signum) {
             }
             dead_pid = child_pid;
             if (WIFSIGNALED(status)) {
-                SPDLOG_ERROR("Dfps(pid={}) terminated unexpectedly, try to get tombstone", dead_pid);
+                SPDLOG_ERROR("{}(pid={}) terminated unexpectedly, try to get tombstone", PROC_NAME, dead_pid);
                 // wait tombstone generated
-                sleep(1);
+                Sleep(SToUs(1.0));
                 PrintTombstone(dead_pid);
             }
             break;
@@ -162,37 +153,23 @@ void Daemon(void) {
     signal(SIGTERM, DaemonSigHandler);
     signal(SIGINT, DaemonSigHandler);
 
-    SPDLOG_INFO("Dfps {}, by Matt Yang (yccy@outlook.com)", VERSION);
+    SPDLOG_INFO("{} {}[{}], by {}", PROC_NAME, VERSION, GetGitCommitHash(), AUTHOR);
 
     Inotify inotify;
     inotify.Add(configFile, Inotify::CLOSE_WRITE, nullptr);
 
-    StartNewDfps();
+    StartNewApp();
 
     for (;;) {
         inotify.WaitAndHandle();
-        SPDLOG_INFO("Config file updated");
-        StartNewDfps();
-        if (new_pid != dead_pid) {
-            if (old_pid) {
-                SPDLOG_INFO("Succeeded to load new config file, terminate the old dfps");
-                kill(old_pid, TERM_SIG);
-            } else {
-                SPDLOG_INFO("Succeeded to load new config file");
-            }
-        } else {
-            SPDLOG_INFO("Failed to load new config file, the old dfps will keep running");
-        }
+        SPDLOG_INFO("Config file updated, restart {} to load new config file", PROC_NAME);
+        KillOldApp();
+        Sleep(SToUs(0.5)); // wait finishing termination
+        StartNewApp();
     }
 }
 
-void PrintHelp(void) {
-    std::cout << std::endl;
-    std::cout << "Dfps " << VERSION << " by Matt Yang (yccy@outlook.com)" << std::endl;
-    std::cout << "Dynamic screen refresh rate controller for Android 10+. Details see " << PROJECT_URL << std::endl;
-    std::cout << "Usage: dfps [-o log_file] config_file" << std::endl;
-    std::cout << std::endl;
-}
+void PrintHelp(void) { std::cout << std::endl << HELP_DESC << std::endl; }
 
 void ParseOpt(int argc, char **argv) {
     static const char opt_string[] = "ho:";
@@ -234,12 +211,13 @@ void ParseOpt(int argc, char **argv) {
 int main(int argc, char **argv) {
     InitLogger();
     ParseOpt(argc, argv);
+    InitArgv(argc, argv);
     InitLogger();
 
     pid_t pid = fork();
     if (pid == 0) {
         setsid();
-        SetSelfThreadName(DAEMON_NAME);
+        SetSelfName(PROC_NAME);
         Daemon();
     }
     return EXIT_SUCCESS;

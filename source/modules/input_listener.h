@@ -1,56 +1,75 @@
 /*
-Dfps
-Copyright (C) 2021 Matt Yang(yccy@outlook.com)
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2021-2022 Matt Yang
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #pragma once
 
 #include "cobridge_type.h"
+#include "platform/module_base.h"
 #include "utils/input_reader.h"
 #include "utils/time_counter.h"
 #include <map>
+#include <memory>
+#include <mutex>
 #include <sys/poll.h>
 #include <thread>
-#include <memory>
 
-class InputListener {
+class InputListener : public ModuleBase {
 public:
     InputListener();
-    void Start(void);
+    ~InputListener();
+    void Start(void) override;
 
 private:
+    void TouchEventThread(void);
+    void OnInputDevUpdated(const std::string &filename, int flag);
+
     void InitReaders(void);
+    void AddReader(const std::string &path);
+    void RemoveReader(const std::string &path);
+    void FlushPendingReaders(void);
+
+    void PreparePoll(void);
     void AddPoll(int fd);
+    void RemovePoll(int fd);
+    void CancelPoll(void);
+
+    void HandleInput(int fd);
     void HandleTouchInput(const InputReader::Info &info);
     void HandleBtnInput(const InputReader::Info &info);
     bool IsGestureStartPos(float x, float y);
 
-    int inputSampleMs_;
     float swipeThd_;
-    float gesturePctX_;
-    float gesturePctY_;
-    int gestureDelayMs_;
-    int holdDelayMs_;
+    float gestureThdX_;
+    float gestureThdY_;
+    int gestureDelayUs_;
+    int holdDelayUs_;
 
     std::map<int, std::unique_ptr<InputReader>> readers_;
+    std::vector<std::string> addPending_;
+    std::vector<std::string> removePending_;
     std::vector<pollfd> pollfds_;
+    int cancelPollFd_;
     std::thread th_;
+    std::mutex mut_;
+
+    InputReader::InfoHandler touchHandler_;
+    InputReader::InfoHandler btnHandler_;
 
     InputReader::Info prevTouch_;
-    InputReader::Info prevBtn_;
+    int prevBtn_;
     InputData prevClassified_;
     InputData classified_;
 

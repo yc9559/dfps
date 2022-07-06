@@ -1,20 +1,18 @@
 /*
-Dfps
-Copyright (C) 2021 Matt Yang(yccy@outlook.com)
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ * Copyright (C) 2021-2022 Matt Yang
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "input_reader.h"
 #include "fmt_exception.h"
@@ -31,13 +29,16 @@ enum KeyState { KEY_STATE_UP = 0, KEY_STATE_DOWN = 1 };
 constexpr std::size_t INPUT_MAX_EVENTS = 1024;
 
 InputReader::InputReader(const std::string &path) : buf_(sizeof(input_event) * INPUT_MAX_EVENTS) {
-    prop_.fd = open(path.c_str(), O_RDONLY | O_CLOEXEC);
+    prop_.fd = open(path.c_str(), O_RDONLY | O_NONBLOCK | O_CLOEXEC);
+    prop_.path = path;
     if (prop_.fd <= 0) {
         throw FmtException("Cannot open input device {}", path);
     }
 
     if (IsTouchPanel()) {
         ReadTouchpanelProp();
+    } else if (IsMouseDev()) {
+        ReadMouseProp();
     } else if (IsBtnDev()) {
         ReadBtnProp();
     } else {
@@ -54,47 +55,26 @@ float LimitRange(int val, const std::pair<int, int> &range) {
     return static_cast<float>(val - range.first) / (range.second - range.first + 1);
 }
 
-void InputReader::Parse(const std::function<void(const Info &)> &onSync) {
+void InputReader::Parse(const InfoHandler &handler) {
     info_.ts = GetNowTs();
+    auto len = read(prop_.fd, buf_.data(), buf_.size());
+    if (len <= 0) {
+        return;
+    }
 
-    size_t len = read(prop_.fd, buf_.data(), buf_.size());
-    size_t nr = len / sizeof(input_event);
+    auto nr = len / sizeof(input_event);
+    const auto base = reinterpret_cast<input_event *>(buf_.data());
     for (size_t i = 0; i < nr; i++) {
-        const auto &evt = *(reinterpret_cast<input_event *>(buf_.data()) + i);
-        switch (evt.type) {
-            case EV_SYN:
-                if (onSync) {
-                    onSync(info_);
-                }
+        const auto evt = base + i;
+        switch (prop_.devType) {
+            case DevType::TOUCH_PANEL:
+                ParseTouchPanel(evt, handler);
                 break;
-            case EV_ABS:
-                switch (evt.code) {
-                    case ABS_MT_POSITION_X:
-                        info_.x = LimitRange(evt.value, prop_.xRange);
-                        break;
-                    case ABS_MT_POSITION_Y:
-                        info_.y = LimitRange(evt.value, prop_.yRange);
-                        break;
-                    case ABS_MT_TRACKING_ID:
-                        if (prop_.useEvtKey == false) {
-                            info_.pressed = (evt.value != UINT_MAX);
-                        }
-                        break;
-                    default:
-                        break;
-                }
+            case DevType::BTN:
+                ParseBtn(evt, handler);
                 break;
-            case EV_KEY:
-                switch (evt.code) {
-                    case BTN_TOUCH:
-                    case BTN_TOOL_FINGER:
-                        info_.pressed = (evt.value == KEY_STATE_DOWN);
-                        prop_.useEvtKey = true;
-                        break;
-                    default:
-                        info_.pressed = (evt.value == KEY_STATE_DOWN);
-                        break;
-                }
+            case DevType::MOUSE:
+                ParseMouse(evt, handler);
                 break;
             default:
                 break;
@@ -143,6 +123,20 @@ bool InputReader::IsBtnDev(void) {
     return true;
 }
 
+bool InputReader::IsMouseDev(void) {
+    auto fd = prop_.fd;
+
+    // support relative position?
+    unsigned long evbit = 0;
+    ioctl(fd, EVIOCGBIT(0, sizeof(evbit)), &evbit);
+    bool hasRelFeature = evbit & (1 << EV_REL);
+    if (hasRelFeature == false) {
+        return false;
+    }
+
+    return true;
+}
+
 void InputReader::ReadTouchpanelProp() {
     auto fd = prop_.fd;
     prop_.devType = DevType::TOUCH_PANEL;
@@ -171,6 +165,84 @@ void InputReader::ReadBtnProp() {
     prop_.name = name;
 }
 
+void InputReader::ReadMouseProp() {
+    auto fd = prop_.fd;
+    prop_.devType = DevType::MOUSE;
+
+    char name[64] = {0};
+    ioctl(fd, EVIOCGNAME(sizeof(name)), name);
+    prop_.name = name;
+}
+
+void InputReader::ParseTouchPanel(const input_event *evt, const InfoHandler &handler) {
+    switch (evt->type) {
+        case EV_SYN:
+            if (handler) {
+                handler(info_);
+            }
+            break;
+        case EV_ABS:
+            switch (evt->code) {
+                case ABS_MT_POSITION_X:
+                    info_.x = LimitRange(evt->value, prop_.xRange);
+                    break;
+                case ABS_MT_POSITION_Y:
+                    info_.y = LimitRange(evt->value, prop_.yRange);
+                    break;
+                case ABS_MT_TRACKING_ID:
+                    if (prop_.useEvtKey == false) {
+                        info_.pressed = (evt->value != UINT_MAX);
+                    }
+                    break;
+                default:
+                    break;
+            }
+            break;
+        case EV_KEY:
+            switch (evt->code) {
+                case BTN_TOUCH:
+                case BTN_TOOL_FINGER:
+                    info_.pressed = (evt->value == KEY_STATE_DOWN);
+                    prop_.useEvtKey = true;
+                    break;
+                default:
+                    break;
+            }
+            break;
+        default:
+            break;
+    }
+}
+
+void InputReader::ParseBtn(const input_event *evt, const InfoHandler &handler) {
+    switch (evt->type) {
+        case EV_SYN:
+            if (handler) {
+                handler(info_);
+            }
+            break;
+        case EV_KEY:
+            info_.pressed = (evt->value == KEY_STATE_DOWN);
+            break;
+        default:
+            break;
+    }
+}
+
+void InputReader::ParseMouse(const input_event *evt, const InfoHandler &handler) {
+    // ignore mouse movement which contains EV_REL, EV_SYN
+    switch (evt->type) {
+        case EV_KEY:
+            info_.pressed = (evt->value == KEY_STATE_DOWN);
+            if (handler) {
+                handler(info_);
+            }
+            break;
+        default:
+            break;
+    }
+}
+
 namespace std {
 
 std::string to_string(InputReader::DevType type) {
@@ -179,6 +251,8 @@ std::string to_string(InputReader::DevType type) {
             return "touchpanel";
         case InputReader::DevType::BTN:
             return "btn";
+        case InputReader::DevType::MOUSE:
+            return "mouse";
         default:
             break;
     }
