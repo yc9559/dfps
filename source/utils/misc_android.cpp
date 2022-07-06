@@ -47,7 +47,7 @@ std::string GetTopAppNameDumpsysAndroid7(void) {
     // osborn:/ # dumpsys activity o | grep top-activity
     //     Proc # 1: fore  T/A/TOP  trm: 0 2899:com.teslacoilsw.launcher/u0a178 (top-activity)
     std::string buf;
-    ExecCmdSync(&buf, "r", "/system/bin/dumpsys", "activity", "o");
+    ExecCmdSync(&buf, "/system/bin/dumpsys", "activity", "o");
     if (buf.empty()) {
         return {};
     }
@@ -214,11 +214,11 @@ std::string GetTombstone(int pid) {
 }
 
 void SyncCallPutRefreshRate(const char *key, const char *hz) {
-    ExecCmdSync(nullptr, "/system/bin/cmd", "/system/bin/cmd", "settings", "put", "system", key, hz);
+    ExecCmdSync(nullptr, "/system/bin/cmd", "settings", "put", "system", key, hz);
 }
 
 void SyncCallSurfaceflingerBackdoor(const char *code, const char *hz) {
-    ExecCmdSync(nullptr, "/system/bin/service", "/system/bin/service", "call", "SurfaceFlinger", code, "i32", hz);
+    ExecCmdSync(nullptr, "/system/bin/service", "call", "SurfaceFlinger", code, "i32", hz);
 }
 
 void SysPeakRefreshRate(const std::string &hz, bool force) {
