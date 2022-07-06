@@ -16,7 +16,10 @@
 
 #pragma once
 
-#include <ucontext.h>
+#include <stdlib.h>
 
-void DumpBacktrace(ucontext_t *uc);
-void SetDumpBacktraceAsCrashHandler(void);
+__BEGIN_DECLS
+
+const char *GetGitCommitHash(void);
+
+__END_DECLS

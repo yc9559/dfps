@@ -16,7 +16,12 @@
 
 #pragma once
 
-#include <ucontext.h>
+#include <stdint.h>
+#include <stdlib.h>
 
-void DumpBacktrace(ucontext_t *uc);
-void SetDumpBacktraceAsCrashHandler(void);
+__BEGIN_DECLS
+
+// make sure -fno-omit-frame-pointer is set
+size_t trace_stackframepointers(void **out_trace, size_t max_depth, size_t skip_initial);
+
+__END_DECLS

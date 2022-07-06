@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-#pragma once
+#include "version.h"
 
-#include <ucontext.h>
+const char COMMIT_HASH[] = "@GIT_REPO_HASH@";
 
-void DumpBacktrace(ucontext_t *uc);
-void SetDumpBacktraceAsCrashHandler(void);
+const char *GetGitCommitHash(void) { return COMMIT_HASH; }
