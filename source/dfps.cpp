@@ -45,9 +45,9 @@ void Dfps::Start(void) {
 }
 
 void Dfps::SetSelfSchedHint(void) {
-    // heavyworker prio 100
-    SchedCtrlSetStaticPrio(0, 100, false);
+    // heavyworker prio 120
+    SchedCtrlSetStaticPrio(0, 120, false);
     HeavyWorker::GetInstance();
-    // others prio 95
-    SchedCtrlSetStaticPrio(0, 95, false);
+    // others prio 98
+    SchedCtrlSetStaticPrio(0, 98, false);
 }

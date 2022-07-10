@@ -36,9 +36,9 @@ wait_until_login() {
 
 wait_until_login
 
-DFPS_DIR="/sdcard/yc/dfps"
+DFPS_DIR="/sdcard/Android/yc/dfps"
 if [ -f $BASEDIR/bin/libc++_shared.so ]; then
     ASAN_LIB="$(ls $BASEDIR/bin/libclang_rt.asan-*-android.so)"
     export LD_PRELOAD="$ASAN_LIB $BASEDIR/bin/libc++_shared.so"
 fi
-$BASEDIR/bin/dfps $DFPS_DIR/dfps.txt -o $DFPS_DIR/dfps.log
+$BASEDIR/bin/dfps $DFPS_DIR/dfps.txt -o $DFPS_DIR/dfps_log.txt

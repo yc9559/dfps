@@ -1,6 +1,11 @@
 # 动态刷新率配置文件
 # Dynamic screen refresh rate controller config
 # 修改本文件后dfps会重新加载本配置
+
+# 触摸松开后等待touchSlackMs毫秒进入空闲状态
+# Wait for touchSlackMs ms to enter the idle state after the touch is released
+/touchSlackMs 4000
+
 # Dfps will automatically reload this config file after modification
 # 支持2种刷新率切换方法，根据设定值的数值范围不同选择对应的方法
 # Two method are supported. Method chosing based on the value
@@ -21,6 +26,10 @@
 # 0:30hz，1:50hz，2:60hz，3:90hz，4:120hz，5:144hz
 # 0:1080p60hz，1:1440p120hz，2:1440p60hz，3:1080p120hz
 
+# 使用Surfaceflinger backdoor法切换屏幕刷新率
+# Use Surfaceflinger backdoor to switch screen refresh rate
+/useSfBackdoor 0
+
 # 分应用规则优先级从高到低排列
 # The priority of the per-app rules is ordered from high to low
 # "-"表示熄屏规则，"*"表示默认规则，熄屏和默认规则必须指定
@@ -32,14 +41,7 @@
 
 # 分应用动态刷新率配置
 # Per-app dynamic screen refresh rate rule
+com.miHoYo.Yuanshen 60 60
 com.hypergryph.arknights 60 60
 - -1 -1
 * 60 120
-
-# 使用Surfaceflinger backdoor法切换屏幕刷新率
-# Use Surfaceflinger backdoor to switch screen refresh rate
-/useSfBackdoor 0
-
-# 触摸松开后等待touchSlackMs毫秒进入空闲状态
-# Wait for touchSlackMs ms to enter the idle state after the touch is released
-/touchSlackMs 4000
