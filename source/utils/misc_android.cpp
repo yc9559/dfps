@@ -224,6 +224,7 @@ void SyncCallSurfaceflingerBackdoor(const char *code, const char *hz) {
 void SysPeakRefreshRate(const std::string &hz, bool force) {
     SyncCallPutRefreshRate("peak_refresh_rate", hz.c_str());
     SyncCallPutRefreshRate("min_refresh_rate", hz.c_str());
+    SyncCallPutRefreshRate("miui_refresh_rate", hz.c_str());
 }
 
 void SysSurfaceflingerBackdoor(const std::string &idx, bool force) {
