@@ -170,40 +170,38 @@ int ReadFile(const std::string_view &path, std::string *content, size_t maxLen) 
     return len;
 }
 
-int WriteFile(const std::string_view &path, const std::string_view &s) {
+int WriteSysfsFile(const std::string_view &path, const std::string_view &s) {
     auto fd = GetFdForWrite(path);
     if (fd > 0) {
-        auto ret = WriteFile(fd, s);
+        auto ret = WriteSysfsFile(fd, s);
         close(fd);
         return ret;
     }
     return -1;
 }
 
-int WriteFile(const std::string_view &path, int s) {
+int WriteSysfsFile(const std::string_view &path, int s) {
     auto fd = GetFdForWrite(path);
     if (fd > 0) {
-        auto ret = WriteFile(fd, s);
+        auto ret = WriteSysfsFile(fd, s);
         close(fd);
         return ret;
     }
     return -1;
 }
 
-int WriteFile(int fd, const std::string_view &s) {
-    if (fd <= 0) {
-        return -1;
+int WriteSysfsFile(int fd, const std::string_view &s) {
+    if (fd > 0) {
+        return write(fd, s.data(), s.length());
     }
-    lseek(fd, 0, SEEK_SET);
-    return write(fd, s.data(), s.length());
+    return -1;
 }
 
-int WriteFile(int fd, int s) {
-    if (fd <= 0) {
-        return -1;
+int WriteSysfsFile(int fd, int s) {
+    if (fd > 0) {
+        return write(fd, &s, sizeof(s));
     }
-    lseek(fd, 0, SEEK_SET);
-    return write(fd, &s, sizeof(s));
+    return -1;
 }
 
 int GetFdForWrite(const std::string_view &path) {

@@ -299,7 +299,7 @@ void DynamicFps::SwitchRefreshRate(int hz) {
 void DynamicFps::NotifyRefreshRate(const std::string_view &hz) {
     int fd = open(notifyPath_.c_str(), O_WRONLY | O_NONBLOCK | O_CLOEXEC | O_CREAT | O_TRUNC);
     if (fd > 0) {
-        WriteFile(fd, hz);
+        WriteSysfsFile(fd, hz);
         close(fd);
     }
 }

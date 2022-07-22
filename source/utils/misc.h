@@ -37,10 +37,10 @@ void SetSelfName(const std::string_view &name);
 void SetSelfThreadName(const std::string_view &name);
 
 int ReadFile(const std::string_view &path, std::string *content, size_t maxLen = 0);
-int WriteFile(const std::string_view &path, const std::string_view &s);
-int WriteFile(const std::string_view &path, int s);
-int WriteFile(int fd, const std::string_view &s);
-int WriteFile(int fd, int s);
+int WriteSysfsFile(const std::string_view &path, const std::string_view &s);
+int WriteSysfsFile(const std::string_view &path, int s);
+int WriteSysfsFile(int fd, const std::string_view &s);
+int WriteSysfsFile(int fd, int s);
 int GetFdForWrite(const std::string_view &path);
 int GetFdForWriteExcluded(const std::string_view &path);
 
