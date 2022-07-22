@@ -210,8 +210,8 @@ void ParseOpt(int argc, char **argv) {
 
 int main(int argc, char **argv) {
     InitLogger();
-    ParseOpt(argc, argv);
     InitArgv(argc, argv);
+    ParseOpt(argc, argv);
     InitLogger();
 
     pid_t pid = fork();
