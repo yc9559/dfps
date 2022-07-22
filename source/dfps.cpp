@@ -27,7 +27,10 @@ Dfps::Dfps() {}
 
 Dfps::~Dfps() {}
 
-void Dfps::Load(const std::string &configPath) { configPath_ = configPath; }
+void Dfps::Load(const std::string &configPath, const std::string &notifyPath) {
+    configPath_ = configPath;
+    notifyPath_ = notifyPath;
+}
 
 void Dfps::Start(void) {
     SetSelfSchedHint();
@@ -36,7 +39,7 @@ void Dfps::Start(void) {
     modules_.emplace_back(std::make_unique<CgroupListener>());
     modules_.emplace_back(std::make_unique<TopappMonitor>());
     modules_.emplace_back(std::make_unique<OffscreenMonitor>());
-    modules_.emplace_back(std::make_unique<DynamicFps>(configPath_));
+    modules_.emplace_back(std::make_unique<DynamicFps>(configPath_, notifyPath_));
 
     for (const auto &m : modules_) {
         m->Start();

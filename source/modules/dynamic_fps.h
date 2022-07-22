@@ -22,7 +22,7 @@
 
 class DynamicFps : public ModuleBase {
 public:
-    explicit DynamicFps(const std::string &configPath);
+    DynamicFps(const std::string &configPath, const std::string &notifyPath);
     void Start(void);
 
 private:
@@ -47,6 +47,7 @@ private:
 
     void SwitchRefreshRate(void);
     void SwitchRefreshRate(int hz);
+    void NotifyRefreshRate(const std::string_view &hz);
 
     bool useSfBackdoor_;
     int64_t touchSlackMs_;
@@ -57,6 +58,7 @@ private:
     FpsRule universial_;
     bool hasUniversial_;
     bool hasOffscreen_;
+    std::string notifyPath_;
 
     bool touchPressed_;
     bool btnPressed_;

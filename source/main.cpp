@@ -40,6 +40,7 @@ constexpr int TERM_SIG = SIGUSR1;
 
 std::string configFile;
 std::string logFile;
+std::string notifyFile;
 
 static pid_t dead_pid;
 static pid_t new_pid;
@@ -76,7 +77,7 @@ void PrintTombstone(int pid) {
 }
 
 void AppMainMayThrow(void) {
-    dfps.Load(configFile);
+    dfps.Load(configFile, notifyFile);
     dfps.Start();
     for (;;) {
         Sleep(UINT32_MAX);
@@ -172,10 +173,11 @@ void Daemon(void) {
 void PrintHelp(void) { std::cout << std::endl << HELP_DESC << std::endl; }
 
 void ParseOpt(int argc, char **argv) {
-    static const char opt_string[] = "ho:";
+    static const char opt_string[] = "ho:n:";
     static const struct option long_opts[] = {
         {"help", no_argument, NULL, 'h'},
         {"outfile", required_argument, NULL, 'o'},
+        {"notify", required_argument, NULL, 'n'},
         {NULL, 0, 0, 0},
     };
     int opt;
@@ -188,6 +190,9 @@ void ParseOpt(int argc, char **argv) {
             case 'o':
                 logFile = std::string(optarg);
                 remove(logFile.c_str());
+                break;
+            case 'n':
+                notifyFile = std::string(optarg);
                 break;
             default:
                 PrintHelp();

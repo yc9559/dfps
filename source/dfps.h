@@ -23,12 +23,13 @@ public:
     Dfps();
     ~Dfps();
 
-    void Load(const std::string &configPath);
+    void Load(const std::string &configPath, const std::string &notifyPath);
     void Start(void);
 
 private:
     void SetSelfSchedHint(void);
 
     std::string configPath_;
+    std::string notifyPath_;
     std::vector<std::unique_ptr<ModuleBase>> modules_;
 };

@@ -39,12 +39,13 @@ std::string Trim(const std::string &str) {
     return str.substr(first, last - first + 1);
 }
 
-DynamicFps::DynamicFps(const std::string &configPath)
+DynamicFps::DynamicFps(const std::string &configPath, const std::string &notifyPath)
     : useSfBackdoor_(DEFAULT_USE_SF_BACKDOOR),
       touchSlackMs_(DEFAULT_TOUCH_SLACK_MS),
       gestureSlackMs_(DEFAULT_GESTURE_SLACK_MS),
       hasUniversial_(false),
       hasOffscreen_(false),
+      notifyPath_(notifyPath),
       touchPressed_(false),
       btnPressed_(false),
       active_(false),
@@ -287,9 +288,18 @@ void DynamicFps::SwitchRefreshRate(int hz) {
 
     std::string hzStr = std::to_string(hz);
     curHz_ = hz;
+    NotifyRefreshRate(hzStr);
     if (useSfBackdoor_) {
         SysSurfaceflingerBackdoor(hzStr, force);
     } else {
         SysPeakRefreshRate(hzStr, force);
+    }
+}
+
+void DynamicFps::NotifyRefreshRate(const std::string_view &hz) {
+    int fd = open(notifyPath_.c_str(), O_WRONLY | O_NONBLOCK | O_CLOEXEC | O_CREAT | O_TRUNC);
+    if (fd > 0) {
+        WriteFile(fd, hz);
+        close(fd);
     }
 }
