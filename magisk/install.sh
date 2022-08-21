@@ -101,7 +101,7 @@ print_modname()
     echo ""
     echo "* Dfps https://github.com/yc9559/dfps/"
     echo "* Author: Matt Yang"
-    echo "* Version: 21.10.31"
+    echo "* Version: 22.08.21"
     echo ""
 }
 

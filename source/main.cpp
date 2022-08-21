@@ -35,7 +35,7 @@ constexpr char AUTHOR[] = "Matt Yang (yccy@outlook.com)";
 constexpr char HELP_DESC[] =
     "Dynamic screen refresh rate controller for Android 10+. Details see https://github.com/yc9559/dfps.\n"
     "Usage: dfps [-o log_file] config_file";
-constexpr char VERSION[] = "v1(21.10.31)";
+constexpr char VERSION[] = "v1(22.08.21)";
 constexpr int TERM_SIG = SIGUSR1;
 
 std::string configFile;
