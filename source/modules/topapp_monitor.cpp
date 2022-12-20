@@ -33,7 +33,7 @@ void TopappMonitor::Start(void) {
     if(GetOSVersion() >= 13) {
         std::thread android13([this](){
             pthread_setname_np(pthread_self(),"Android13Worker");
-            SPDLOG_INFO("Android13Worker: GetOSVer{}",GetOSVersion());
+            SPDLOG_INFO("Android13Worker: GetOSVer: {}",GetOSVersion());
             while(true)
             {
                 ATRACE_SCOPE(GetTopAppName);
