@@ -38,7 +38,7 @@ set(THIS_LINK_FLAGS
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     target_link_libraries(dfps PRIVATE c++_static dl)
     list(APPEND THIS_COMPILE_FLAGS -O3 -fvisibility=hidden -fvisibility-inlines-hidden -flto)
-    list(APPEND THIS_LINK_FLAGS -static -O3 -fvisibility=hidden -fvisibility-inlines-hidden -flto -Wl,--strip-all)
+    list(APPEND THIS_LINK_FLAGS -static -O3 -fvisibility=hidden -fvisibility-inlines-hidden -flto -Wl,--icf=all,-O3,--lto-O3,--strip-all)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
     list(APPEND THIS_COMPILE_FLAGS -fsanitize=address -DSPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_DEBUG)
     list(APPEND THIS_LINK_FLAGS -fsanitize=address)
