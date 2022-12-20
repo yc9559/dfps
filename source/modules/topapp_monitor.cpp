@@ -30,6 +30,27 @@ TopappMonitor::~TopappMonitor() {}
 
 void TopappMonitor::Start(void) {
     using namespace std::placeholders;
+    if(GetOSVersion() >= 13) {
+        std::thread android13([this](){
+            pthread_setname_np(pthread_self(),"Android13Worker");
+            SPDLOG_INFO("Android13Worker: GetOSVer{}",GetOSVersion());
+            while(true)
+            {
+                ATRACE_SCOPE(GetTopAppName);
+                auto pkgName = GetTopAppNameDumpsys();
+                if (pkgName.empty()) {
+                    return;
+                }
+                if (pkgName != prevPkgName_) {
+                    prevPkgName_ = pkgName;
+                    SPDLOG_DEBUG("topapp.pkgName {}", pkgName);
+                    CoPublish("topapp.pkgName", &pkgName);
+                }
+                sleep(1);
+            }
+        });
+        android13.detach();
+    }
     CoSubscribe("cgroup.ta.list", std::bind(&TopappMonitor::OnTopappList, this, _1));
 }
 
