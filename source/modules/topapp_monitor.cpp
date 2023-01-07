@@ -39,7 +39,8 @@ void TopappMonitor::Start(void) {
                 ATRACE_SCOPE(GetTopAppName);
                 auto pkgName = GetTopAppNameDumpsys();
                 if (pkgName.empty()) {
-                    return;
+                    sleep(1);
+                    continue;
                 }
                 if (pkgName != prevPkgName_) {
                     prevPkgName_ = pkgName;
