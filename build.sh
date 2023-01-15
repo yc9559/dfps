@@ -24,8 +24,8 @@ BASEDIR="$(dirname $(readlink -f "$0"))"
 BUILD_DIR="$BASEDIR/build"
 BUILD_TYPE="$1"
 BUILD_TASKS="$2"
-ARM64_PREFIX=aarch64-linux-android21
-ARM32_PREFIX=armv7a-linux-androideabi21
+ARM64_PREFIX=aarch64-linux-android23
+ARM32_PREFIX=armv7a-linux-androideabi23
 
 # $1:prefix $2:targets
 build_targets() {
