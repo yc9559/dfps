@@ -227,8 +227,8 @@ int GetScreenBrightness(void) {
     return -1;
 }
 
-void SyncCallPutRefreshRate(const char *key, const char *hz) {
-    ExecCmdSync(nullptr, "/system/bin/cmd", "settings", "put", "system", key, hz);
+void CallSettingsPut(const char *ns, const char *key, const char *val) {
+    ExecCmd(nullptr, "/system/bin/cmd", "settings", "put", ns, key, val);
 }
 
 void SyncCallSurfaceflingerBackdoor(const char *code, const char *hz) {
@@ -236,9 +236,10 @@ void SyncCallSurfaceflingerBackdoor(const char *code, const char *hz) {
 }
 
 void SysPeakRefreshRate(const std::string &hz, bool force) {
-    SyncCallPutRefreshRate("peak_refresh_rate", hz.c_str());
-    SyncCallPutRefreshRate("min_refresh_rate", hz.c_str());
-    SyncCallPutRefreshRate("miui_refresh_rate", hz.c_str());
+    CallSettingsPut("system", "peak_refresh_rate", hz.c_str());
+    CallSettingsPut("system", "min_refresh_rate", hz.c_str());
+    CallSettingsPut("system", "miui_refresh_rate", hz.c_str());
+    CallSettingsPut("secure", "miui_refresh_rate", hz.c_str());
 }
 
 void SysSurfaceflingerBackdoor(const std::string &idx, bool force) {

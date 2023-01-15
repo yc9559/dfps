@@ -42,9 +42,10 @@ on_remove() {
     mkdir -p $USER_PATH
     mv /sdcard/dfps.txt $USER_PATH/
 
-    cmd settings delete system min_refresh_rate
-    cmd settings delete system miui_refresh_rate
-    cmd settings delete system peak_refresh_rate
+    cmd settings reset system min_refresh_rate
+    cmd settings reset system peak_refresh_rate
+    cmd settings reset system miui_refresh_rate
+    cmd settings reset secure miui_refresh_rate
 }
 
 # do not block boot
