@@ -1,6 +1,6 @@
 id=yc_dfps
 name=Dfps
-version=22.08.21
+version=23.01.15
 versionCode=1
 author=Matt Yang
 description=Dynamic screen refresh rate controller for Android 10+. Repo: https://github.com/yc9559/dfps/
