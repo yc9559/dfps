@@ -117,6 +117,8 @@ on_install()
     local cfg_dir
     cfg_dir="/sdcard/Android/yc/dfps"
     mkdir -p $cfg_dir
+    cp $MODPATH/config/dfps_help_cn.md $cfg_dir
+    cp $MODPATH/config/dfps_help_en.md $cfg_dir
     if [ ! -e "$cfg_dir/dfps.txt" ]; then
         cp $MODPATH/config/dfps.txt $cfg_dir/dfps.txt
     fi
