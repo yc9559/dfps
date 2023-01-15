@@ -37,6 +37,7 @@ private:
     void AddRule(const std::string &pkgName, FpsRule rule);
     void SetTunable(const std::string &tunable, const std::string &value);
     std::string FindInvalidRule(void);
+    FpsRule GetCurrentRule(void) const;
 
     void AddReactor(void);
     void OnInputTouch(const void *data);
@@ -46,7 +47,7 @@ private:
     void OnTopAppSwitch(const void *data);
     void OnOffscreen(const void *data);
 
-    void SwitchRefreshRate(void);
+    void SwitchRefreshRate(bool force = false);
     void SwitchRefreshRate(int hz);
     void NotifyRefreshRate(const std::string_view &hz);
 

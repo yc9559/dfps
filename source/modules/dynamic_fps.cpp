@@ -183,6 +183,22 @@ std::string DynamicFps::FindInvalidRule(void) {
     return {};
 }
 
+DynamicFps::FpsRule DynamicFps::GetCurrentRule(void) const {
+    FpsRule rule;
+    const auto &pkgName = overridedApp_.empty() ? curApp_ : overridedApp_;
+    if (pkgName == OFFSCREEN_PKG_NAME) {
+        rule = offscreen_;
+    } else {
+        auto it = rules_.find(pkgName);
+        if (it != rules_.end()) {
+            rule = it->second;
+        } else {
+            rule = universial_;
+        }
+    }
+    return rule;
+}
+
 void DynamicFps::AddReactor(void) {
     using namespace std::placeholders;
     CoSubscribe("input.touch", std::bind(&DynamicFps::OnInputTouch, this, _1));
@@ -240,8 +256,7 @@ void DynamicFps::OnTopAppSwitch(const void *data) {
     const auto &topApp = CoBridge::Get<std::string>(data);
     if (topApp != curApp_) {
         curApp_ = topApp;
-        forceSwitch_ = true;
-        SwitchRefreshRate();
+        SwitchRefreshRate(true);
     }
 }
 
@@ -254,40 +269,36 @@ void DynamicFps::OnOffscreen(const void *data) {
     isOffscreen_ = isOff;
     if (isOff) {
         overridedApp_ = OFFSCREEN_PKG_NAME;
-        forceSwitch_ = true;
-        SwitchRefreshRate();
+        SwitchRefreshRate(true);
     } else {
         auto exitOffscreen = [=]() {
             if (overridedApp_ == OFFSCREEN_PKG_NAME) {
                 overridedApp_ = "";
-                forceSwitch_ = true;
-                SwitchRefreshRate();
+                SwitchRefreshRate(true);
             }
         };
         DwSetWork(dwWakeup_, exitOffscreen, GetNowTs() + MsToUs(gestureSlackMs_));
     }
 }
 
-void DynamicFps::SwitchRefreshRate(void) {
-    FpsRule rule;
-    const auto &pkgName = overridedApp_.empty() ? curApp_ : overridedApp_;
-    if (pkgName == OFFSCREEN_PKG_NAME) {
-        rule = offscreen_;
+void DynamicFps::SwitchRefreshRate(bool force) {
+    forceSwitch_ = force;
+    if (active_) {
+        HwSetWork(hw_, [this]() {
+            auto rule = GetCurrentRule();
+            SwitchRefreshRate(rule.active);
+        });
     } else {
-        auto it = rules_.find(pkgName);
-        if (it != rules_.end()) {
-            rule = it->second;
-        } else {
-            rule = universial_;
-        }
+        HwSetWork(hw_, [this]() {
+            auto rule = GetCurrentRule();
+            if (brightnessTimer_.ElapsedS() > BRIGHTNESS_SAMPLE_INTERVAL_S) {
+                brightnessTimer_.Reset();
+                auto brightness = GetScreenBrightness();
+                lowBrightness_ = brightness < enableMinBrightness_;
+            }
+            SwitchRefreshRate(lowBrightness_ ? rule.active : rule.idle);
+        });
     }
-    if (active_ == false && brightnessTimer_.ElapsedS() > BRIGHTNESS_SAMPLE_INTERVAL_S) {
-        brightnessTimer_.Reset();
-        auto brightness = GetScreenBrightness();
-        lowBrightness_ = brightness < enableMinBrightness_;
-    }
-    int hz = (active_ || lowBrightness_) ? rule.active : rule.idle;
-    HwSetWork(hw_, [=]() { SwitchRefreshRate(hz); });
 }
 
 void DynamicFps::SwitchRefreshRate(int hz) {
