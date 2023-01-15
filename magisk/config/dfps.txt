@@ -6,6 +6,19 @@
 # Wait for touchSlackMs ms to enter the idle state after the touch is released
 /touchSlackMs 4000
 
+# 启用动态刷新率的最低亮度，低于此亮度固定使用触摸操作的刷新率，当前亮度值每10秒刷新一次
+# The minimum brightness to enable the dynamic refresh rate, below which the refresh rate for touch operations is fixed
+# OLED屏幕低亮度下切换屏幕刷新率可能出现亮度和色彩变化，设置此参数以平衡屏幕显示表现和功耗
+# MIUI14屏幕亮度与亮度值的关系：
+# 255 = 自动激发亮度100%
+# 128 = 手动亮度100%
+# 64  = 手动亮度85%
+# 32  = 手动亮度70%
+# 16  = 手动亮度50%
+# 8   = 手动亮度30%
+# 1   = 手动亮度0%
+/enableMinBrightness 8
+
 # Dfps will automatically reload this config file after modification
 # 支持2种刷新率切换方法，根据设定值的数值范围不同选择对应的方法
 # Two method are supported. Method chosing based on the value

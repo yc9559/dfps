@@ -17,6 +17,7 @@
 #pragma once
 
 #include "platform/module_base.h"
+#include "utils/time_counter.h"
 #include <map>
 #include <string>
 
@@ -52,6 +53,7 @@ private:
     bool useSfBackdoor_;
     int64_t touchSlackMs_;
     int64_t gestureSlackMs_;
+    int enableMinBrightness_;
 
     std::map<std::string, FpsRule> rules_;
     FpsRule offscreen_;
@@ -63,6 +65,8 @@ private:
     bool touchPressed_;
     bool btnPressed_;
     bool active_;
+    bool lowBrightness_;
+    TimeCounter brightnessTimer_;
     std::string curApp_;
     std::string overridedApp_;
     bool isOffscreen_;

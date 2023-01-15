@@ -213,6 +213,20 @@ std::string GetTombstone(int pid) {
     return bt;
 }
 
+int GetScreenBrightness(void) {
+    std::string buf;
+    ExecCmdSync(&buf, "/system/bin/cmd", "settings", "get", "system", "screen_brightness");
+    if (buf.empty()) {
+        return -1;
+    }
+
+    int brightness = 0;
+    if (ParseInt(buf.c_str(), &brightness)) {
+        return brightness;
+    }
+    return -1;
+}
+
 void SyncCallPutRefreshRate(const char *key, const char *hz) {
     ExecCmdSync(nullptr, "/system/bin/cmd", "settings", "put", "system", key, hz);
 }

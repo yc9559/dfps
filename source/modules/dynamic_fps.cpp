@@ -24,8 +24,11 @@
 constexpr char MODULE_NAME[] = "DynamicFps";
 constexpr int64_t DEFAULT_GESTURE_SLACK_MS = 4000;
 constexpr int64_t DEFAULT_TOUCH_SLACK_MS = 4000;
+constexpr int DEFAULT_ENABLE_MIN_BRIGHTNESS = 8;
 constexpr bool DEFAULT_USE_SF_BACKDOOR = false;
 constexpr int MIN_TOUCH_SLACK_MS = 100;
+constexpr int MAX_ENABLE_MIN_BRIGHTNESS = 255;
+constexpr double BRIGHTNESS_SAMPLE_INTERVAL_S = 10;
 constexpr char UNIVERSIAL_PKG_NAME[] = "*";
 constexpr char OFFSCREEN_PKG_NAME[] = "-";
 
@@ -43,12 +46,14 @@ DynamicFps::DynamicFps(const std::string &configPath, const std::string &notifyP
     : useSfBackdoor_(DEFAULT_USE_SF_BACKDOOR),
       touchSlackMs_(DEFAULT_TOUCH_SLACK_MS),
       gestureSlackMs_(DEFAULT_GESTURE_SLACK_MS),
+      enableMinBrightness_(DEFAULT_ENABLE_MIN_BRIGHTNESS),
       hasUniversial_(false),
       hasOffscreen_(false),
       notifyPath_(notifyPath),
       touchPressed_(false),
       btnPressed_(false),
       active_(false),
+      lowBrightness_(false),
       isOffscreen_(false),
       curHz_(INT32_MAX),
       forceSwitch_(false),
@@ -149,6 +154,8 @@ void DynamicFps::SetTunable(const std::string &tunable, const std::string &value
         useSfBackdoor_ = (std::stoi(value) > 0) ? true : false;
     } else if (tunable == "touchSlackMs") {
         touchSlackMs_ = std::max(MIN_TOUCH_SLACK_MS, std::stoi(value));
+    } else if (tunable == "enableMinBrightness") {
+        enableMinBrightness_ = std::min(MAX_ENABLE_MIN_BRIGHTNESS, std::stoi(value));
     } else {
         SPDLOG_WARN("Unknown tunable '{}' in the config file", tunable);
     }
@@ -274,7 +281,12 @@ void DynamicFps::SwitchRefreshRate(void) {
             rule = universial_;
         }
     }
-    int hz = active_ ? rule.active : rule.idle;
+    if (active_ == false && brightnessTimer_.ElapsedS() > BRIGHTNESS_SAMPLE_INTERVAL_S) {
+        brightnessTimer_.Reset();
+        auto brightness = GetScreenBrightness();
+        lowBrightness_ = brightness < enableMinBrightness_;
+    }
+    int hz = (active_ || lowBrightness_) ? rule.active : rule.idle;
     HwSetWork(hw_, [=]() { SwitchRefreshRate(hz); });
 }
 
