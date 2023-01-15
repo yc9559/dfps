@@ -24,9 +24,13 @@
 
 constexpr char MODULE_NAME[] = "CgroupListener";
 constexpr char TOP_PATH[] = "/dev/cpuset/top-app/tasks";
+constexpr char TOP_PATH2[] = "/dev/cpuset/top-app/cgroup.procs";
 constexpr char FG_PATH[] = "/dev/cpuset/foreground/tasks";
+constexpr char FG_PATH2[] = "/dev/cpuset/foreground/cgroup.procs";
 constexpr char BG_PATH[] = "/dev/cpuset/background/tasks";
+constexpr char BG_PATH2[] = "/dev/cpuset/background/cgroup.procs";
 constexpr char RE_PATH[] = "/dev/cpuset/restricted/tasks";
+constexpr char RE_PATH2[] = "/dev/cpuset/restricted/cgroup.procs";
 
 constexpr size_t CGROUP_TASKS_MAX_LEN = 32 * 1024;
 constexpr int64_t SCAN_DELAY_LONG_MS = 80;  // read tasklist cost 3~8ms
@@ -96,9 +100,13 @@ void CgroupListener::Start(void) {
 
     using namespace std::placeholders;
     addWatch(TOP_PATH, std::bind(&CgroupListener::OnTaModified, this, _1, _2));
+    addWatch(TOP_PATH2, std::bind(&CgroupListener::OnTaModified, this, _1, _2));
     addWatch(FG_PATH, std::bind(&CgroupListener::OnFgModified, this, _1, _2));
+    addWatch(FG_PATH2, std::bind(&CgroupListener::OnFgModified, this, _1, _2));
     addWatch(BG_PATH, std::bind(&CgroupListener::OnBgModified, this, _1, _2));
+    addWatch(BG_PATH2, std::bind(&CgroupListener::OnBgModified, this, _1, _2));
     addWatch(RE_PATH, std::bind(&CgroupListener::OnReModified, this, _1, _2));
+    addWatch(RE_PATH2, std::bind(&CgroupListener::OnReModified, this, _1, _2));
 }
 
 void CgroupListener::OnTaModified(const std::string &, int) {
