@@ -8,7 +8,7 @@ Dynamic screen refresh rate controller for Android. Splited from [Uperf v2](http
 - Per-app configuration
 - Two low-level methods: `PEAK_REFRESH_RATE` and `Surfaceflinger backdoor`
 - Stop dynamically switch screen refresh rate when the brightness is low
-- Support Android 10-13
+- Support Android 10-14
 
 ## Usage
 
